@@ -60,13 +60,11 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn-group{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 
-/* Status message */
 .status{font-size:12px;padding:8px 12px;border-radius:8px;margin-top:10px;display:none}
 .status.ok{background:rgba(22,163,74,.15);color:#4ade80;display:block}
 .status.warn{background:rgba(245,158,11,.15);color:#fbbf24;display:block}
 .status.err{background:rgba(220,38,38,.15);color:#f87171;display:block}
 
-/* Mapping */
 .mapping{font-size:11px;color:#9ca3af;margin-top:8px;display:none}
 .mapping.show{display:block}
 .mapping .map-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dashed #454b52}
@@ -87,7 +85,6 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .preview-toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
 .preview-toolbar .actions .btn{width:auto;padding:9px 16px}
 
-/* Empty state */
 .empty{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   min-height:60vh;color:#9ca3af;text-align:center;padding:40px;
@@ -96,7 +93,7 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .empty h2{color:var(--graphite);margin:0 0 8px}
 .empty p{max-width:400px}
 
-/* ============ PDF CONTENT (corporate style) ============ */
+/* ============ PDF CONTENT ============ */
 #pdf-content{background:var(--bg);border-radius:16px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.08)}
 .corp-header{background:linear-gradient(135deg,var(--graphite-dark),var(--graphite));color:#fff;padding:32px 36px;position:relative;overflow:hidden}
 .corp-header::after{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:var(--yellow);opacity:.15;border-radius:50%}
@@ -121,7 +118,7 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .corp-card .hint{font-size:12px;color:var(--muted);margin-top:4px}
 .corp-card.dark .hint{color:#9ca3af}
 
-.corp-section-title{font-size:20px;margin:28px 0 12px;color:var(--graphite);display:flex;align-items:center;gap:10px}
+.corp-section-title{font-size:18px;margin:28px 0 12px;color:var(--graphite);display:flex;align-items:center;gap:10px}
 .corp-section-title::before{content:'';width:6px;height:22px;background:var(--yellow);border-radius:2px}
 
 .table-wrap{overflow-x:auto;background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:20px}
@@ -134,7 +131,6 @@ td.center{text-align:center}
 tr.total-row td{font-weight:800;background:#fff8e1;font-size:13px}
 tr.grand-total td{font-weight:800;background:var(--graphite);color:#fff;font-size:14px}
 tr.grand-total td span{color:var(--yellow)}
-tr.section-sep td{background:#f3f4f6;font-weight:700;color:var(--graphite);text-transform:uppercase;font-size:11px;letter-spacing:1px}
 
 .corp-footer{background:var(--graphite-dark);color:#fff;padding:28px 36px;margin-top:8px}
 .corp-footer .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
@@ -145,13 +141,11 @@ tr.section-sep td{background:#f3f4f6;font-weight:700;color:var(--graphite);text-
 .corp-footer .sign div{font-size:13px}
 .qr{width:88px;height:88px;background:#fff;border-radius:8px;padding:4px}
 
-/* Loader */
 #pdf-loader{position:fixed;inset:0;background:rgba(43,47,51,.9);display:none;align-items:center;justify-content:center;z-index:1000;color:#fff;font-weight:600}
 #pdf-loader .box{background:var(--graphite-dark);padding:32px 48px;border-radius:16px;border:2px solid var(--yellow);text-align:center}
 #pdf-loader .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--yellow);border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ============ PRINT ============ */
 @media print{
   @page{size:A4;margin:10mm}
   body{background:#fff}
@@ -173,12 +167,10 @@ tr.section-sep td{background:#f3f4f6;font-weight:700;color:var(--graphite);text-
 
 <div class="app">
 
-  <!-- ================= SIDEBAR ================= -->
   <aside class="sidebar">
     <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор</h2>
     <div class="tagline">Загрузите расчёт — получите фирменное КП и PDF</div>
 
-    <!-- 1. ЗАГРУЗКА -->
     <div class="panel">
       <h3>1. Загрузка расчёта</h3>
       <div class="dropzone" id="dropzone">
@@ -203,7 +195,6 @@ tr.section-sep td{background:#f3f4f6;font-weight:700;color:var(--graphite);text-
       <div class="mapping" id="mapping"></div>
     </div>
 
-    <!-- 2. РЕКВИЗИТЫ -->
     <div class="panel">
       <h3>2. Реквизиты КП</h3>
       <div class="field row">
@@ -221,7 +212,6 @@ tr.section-sep td{background:#f3f4f6;font-weight:700;color:var(--graphite);text-
       </div>
     </div>
 
-    <!-- 3. РЕКВИЗИТЫ КОМПАНИИ -->
     <div class="panel">
       <h3>3. Реквизиты компании</h3>
       <div class="field"><label>Юр. лицо</label><input id="company" value="ООО «ЛучСтрой Групп»"></div>
@@ -237,7 +227,6 @@ tr.section-sep td{background:#f3f4f6;font-weight:700;color:var(--graphite);text-
       </div>
     </div>
 
-    <!-- 4. ЭКСПОРТ -->
     <div class="panel">
       <h3>4. Экспорт</h3>
       <button class="btn primary" id="btnBuild" disabled>👁 Сформировать превью</button>
@@ -248,7 +237,6 @@ tr.section-sep td{background:#f3f4f6;font-weight:700;color:var(--graphite);text-
     </div>
   </aside>
 
-  <!-- ================= PREVIEW ================= -->
   <main class="preview-wrap">
     <div class="preview-toolbar">
       <div class="info" id="toolbarInfo">Загрузите расчёт, чтобы увидеть превью</div>
@@ -268,45 +256,50 @@ tr.section-sep td{background:#f3f4f6;font-weight:700;color:var(--graphite);text-
   </main>
 </div>
 
-<!-- Loader -->
 <div id="pdf-loader"><div class="box"><div class="spinner"></div>Формируем PDF…</div></div>
 
 <script>
 /* ============================================================
-   ЛУЧСТРОЙ КП-ГЕНЕРАТОР
+   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v2.0
    ============================================================ */
 
-let PARSED = null; // { meta, sections:[{title,rows,total}], grandTotal }
+let PARSED = null;
 
-/* ---------- Форматирование чисел ---------- */
 function fmt(n){
   if(n===null||n===undefined||isNaN(n)) return '—';
   return Number(n).toLocaleString('ru-RU',{maximumFractionDigits:2});
 }
 function parseNum(v){
-  if(v===null||v===undefined) return null;
+  if(v===null||v===undefined||v==='') return null;
   if(typeof v==='number') return v;
-  let s=String(v).replace(/[₽руб.\s]/gi,'').replace(/\u00a0/g,'').replace(',','.');
-  s=s.replace(/[^0-9.\-]/g,'');
+  let s=String(v)
+    .replace(/\u00a0/g,'')
+    .replace(/[₽руб]/gi,'')
+    .replace(/\s/g,'')
+    .replace(/,/g,'.')
+    .replace(/[^0-9.\-]/g,'');
   const n=parseFloat(s);
   return isNaN(n)?null:n;
 }
 
-/* ---------- Определение колонок ---------- */
 const COL_PATTERNS={
-  num:      /^(№|no|номер|п\/п|пп)$/i,
-  name:     /(наимен|назван|работа|материал|позиц)/i,
-  req:      /(требован|характер|специф|гост)/i,
-  qty:      /(кол-?во|колич|объ[её]м)/i,
-  unit:     /^(ед|ед\.|единица|ед\.изм)/i,
-  price:    /(цена|стоимост[ьи] за|price)/i,
-  sum:      /(сумма|итого|всего|стоимост[ьи]$)/i,
-  note:     /(примеч|коммент|note)/i
+  num:    /^(№|no\.?|номер|п\/п|пп|позиция|поз\.?)$/i,
+  name:   /(наимен|назван|технич.*характер|описание)/i,
+  req:    /(требован|характер|специф|гост|марка|обознач|опросн)/i,
+  code:   /(^код|артикул)/i,
+  vendor: /(завод|изготов|производ)/i,
+  unit:   /^(ед\.?\s*изм|ед\.|единица|ед$)/i,
+  qty:    /(кол-?во|колич|объ[её]м)/i,
+  mass:   /(масса|вес)/i,
+  note:   /(примеч|коммент|note)/i,
+  price:  /(цена|стоимост[ьи] за|price)/i,
+  sum:    /(сумма|итого|всего|стоимост[ьи]$)/i
 };
 function detectColumns(headerRow){
   const map={};
   headerRow.forEach((cell,idx)=>{
     const v=String(cell||'').trim();
+    if(!v) return;
     for(const key in COL_PATTERNS){
       if(map[key]===undefined && COL_PATTERNS[key].test(v)){ map[key]=idx; break; }
     }
@@ -314,78 +307,72 @@ function detectColumns(headerRow){
   return map;
 }
 
-/* ---------- Определение раздела ---------- */
-const SECTION_RE=/^(материал|работ|оборуд|услуг|монтаж|доставк)/i;
-const TOTAL_RE=/^(итого|всего|итог)/i;
+function buildReq(r, colMap){
+  const parts=[];
+  if(colMap.req!==undefined    && r[colMap.req])    parts.push(String(r[colMap.req]).trim());
+  if(colMap.code!==undefined   && r[colMap.code])   parts.push(String(r[colMap.code]).trim());
+  if(colMap.vendor!==undefined && r[colMap.vendor]) parts.push(String(r[colMap.vendor]).trim());
+  return parts.join(' · ');
+}
 
-/* ---------- Парсинг массива строк ---------- */
 function parseRows(rows){
   if(!rows||!rows.length) throw new Error('Пустые данные');
 
-  // Находим строку заголовка (первые 5 строк ищем по ключевым словам)
   let headerIdx=-1, colMap=null;
-  for(let i=0;i<Math.min(6,rows.length);i++){
+  for(let i=0;i<Math.min(10,rows.length);i++){
     const m=detectColumns(rows[i]);
-    if(m.name!==undefined && (m.qty!==undefined||m.sum!==undefined||m.price!==undefined)){
+    const matches=Object.keys(m).length;
+    if(m.name!==undefined && matches>=4 &&
+       (m.qty!==undefined||m.price!==undefined||m.sum!==undefined)){
       headerIdx=i; colMap=m; break;
     }
   }
-  if(headerIdx===-1) throw new Error('Не удалось найти строку заголовков. Нужны колонки: Наименование, Кол-во, Цена/Сумма.');
+  if(headerIdx===-1){
+    throw new Error('Не найдена строка заголовков. Нужны столбцы: Наименование, Кол-во, Цена или Сумма.');
+  }
 
   const sections=[];
   let current={title:'ПОЗИЦИИ', rows:[], total:0};
-  let grandTotal=0;
-  let pendingTotal=null;
 
   for(let i=headerIdx+1;i<rows.length;i++){
     const r=rows[i]||[];
-    const first=String(r[0]||'').trim();
-    const name=String(r[colMap.name]!==undefined?r[colMap.name]:'').trim();
+    const first   = String(r[0]||'').trim();
+    const nameVal = colMap.name!==undefined ? String(r[colMap.name]||'').trim() : '';
 
-    // Пустая строка — пропускаем
-    if(!first && !name) continue;
+    if(!first && !nameVal) continue;
 
-    // Строка-раздел (например, «МАТЕРИАЛЫ», «РАБОТЫ»)
-    if(SECTION_RE.test(first) && !name){
+    if(!nameVal){
       if(current.rows.length) sections.push(current);
       current={title:first.toUpperCase(), rows:[], total:0};
       continue;
     }
 
-    // Строка-итог
-    if(TOTAL_RE.test(first) || TOTAL_RE.test(name)){
-      const sumVal = colMap.sum!==undefined ? parseNum(r[colMap.sum]) : null;
-      if(sumVal!==null) pendingTotal=sumVal;
-      continue;
-    }
-
-    // Обычная позиция
     const qty   = colMap.qty   !==undefined ? parseNum(r[colMap.qty])   : null;
     const price = colMap.price !==undefined ? parseNum(r[colMap.price]) : null;
     let   sum   = colMap.sum   !==undefined ? parseNum(r[colMap.sum])   : null;
     if(sum===null && qty!==null && price!==null) sum=qty*price;
 
     current.rows.push({
-      num: colMap.num!==undefined ? String(r[colMap.num]||'').trim() : String(current.rows.length+1),
-      name: name || first,
-      req:  colMap.req!==undefined ? String(r[colMap.req]||'').trim() : '',
-      qty, unit: colMap.unit!==undefined ? String(r[colMap.unit]||'').trim() : '',
-      price, sum,
-      note: colMap.note!==undefined ? String(r[colMap.note]||'').trim() : ''
+      num:   colMap.num!==undefined ? String(r[colMap.num]||'').trim() : String(current.rows.length+1),
+      name:  nameVal,
+      req:   buildReq(r, colMap),
+      qty,
+      unit:  colMap.unit!==undefined ? String(r[colMap.unit]||'').trim() : '',
+      price,
+      sum,
+      note:  colMap.note!==undefined ? String(r[colMap.note]||'').trim() : ''
     });
   }
   if(current.rows.length) sections.push(current);
 
-  // Считаем итоги по разделам и общий
   sections.forEach(s=>{
     if(!s.total) s.total=s.rows.reduce((a,r)=>a+(r.sum||0),0);
-    grandTotal+=s.total;
   });
+  const grandTotal=sections.reduce((a,s)=>a+s.total,0);
 
   return {colMap, sections, grandTotal, headerIdx};
 }
 
-/* ---------- Чтение файла ---------- */
 function handleFile(file){
   setStatus('warn','Читаем файл…');
   const reader=new FileReader();
@@ -404,7 +391,6 @@ function handleFile(file){
   reader.readAsArrayBuffer(file);
 }
 
-/* ---------- Парсинг вставки ---------- */
 function parsePaste(){
   const text=document.getElementById('pasteArea').value.trim();
   if(!text){ setStatus('err','Вставьте данные в поле'); return; }
@@ -412,14 +398,15 @@ function parsePaste(){
   finishParse(rows);
 }
 
-/* ---------- Финализация парсинга ---------- */
 function finishParse(rows){
   try{
     const res=parseRows(rows);
     PARSED=res;
-    // Показываем какие колонки распознаны
+
     const m=res.colMap;
-    const names={num:'№',name:'Наименование',req:'Требования',qty:'Кол-во',unit:'Ед.',price:'Цена',sum:'Сумма',note:'Примечание'};
+    const names={num:'№ / Позиция',name:'Наименование',req:'Тип / Марка',code:'Код',
+                 vendor:'Завод',unit:'Ед. изм.',qty:'Кол-во',mass:'Масса',
+                 note:'Примечание',price:'Цена',sum:'Сумма'};
     let html='';
     for(const k in names){
       html+=`<div class="map-row"><span>${names[k]}</span><b>${m[k]!==undefined?'✓ колонка '+(m[k]+1):'—'}</b></div>`;
@@ -427,26 +414,20 @@ function finishParse(rows){
     const mp=document.getElementById('mapping');
     mp.innerHTML=html; mp.classList.add('show');
 
-    const total=sectionsCount(res);
-    setStatus('ok',`Распознано: ${total.sections} раздел(а), ${total.rows} позиций, итого ${fmt(res.grandTotal)} ₽`);
+    let rowsCount=0; res.sections.forEach(s=>rowsCount+=s.rows.length);
+    setStatus('ok',`Распознано: ${res.sections.length} раздел(ов), ${rowsCount} позиций, итого ${fmt(res.grandTotal)} ₽`);
     document.getElementById('btnBuild').disabled=false;
   }catch(err){
     console.error(err);
     setStatus('err',err.message);
   }
 }
-function sectionsCount(res){
-  let rows=0; res.sections.forEach(s=>rows+=s.rows.length);
-  return {sections:res.sections.length, rows};
-}
 
-/* ---------- Статус ---------- */
 function setStatus(type,msg){
   const el=document.getElementById('status');
   el.className='status '+type; el.textContent=msg;
 }
 
-/* ---------- Сборка мета ---------- */
 function getMeta(){
   const g=id=>document.getElementById(id).value.trim();
   return {
@@ -459,7 +440,6 @@ function getMeta(){
   };
 }
 
-/* ---------- ГЛАВНАЯ: построение превью ---------- */
 function buildPreview(){
   if(!PARSED){ setStatus('err','Сначала загрузите расчёт'); return; }
   const m=getMeta();
@@ -476,32 +456,11 @@ function buildPreview(){
   setStatus('ok','Превью сформировано. Можно скачать PDF.');
 }
 
-/* ---------- Рендер КП ---------- */
 function renderKP(data,m){
   const {sections,grandTotal}=data;
+  const rowsCount=sections.reduce((a,s)=>a+s.rows.length,0);
 
-  // Определяем «варианты»: если разделов МАТЕРИАЛЫ+РАБОТЫ — это один вариант.
-  // Разделим на варианты по ключевым словам, если есть два набора.
-  const hasMultipleVariants = sections.some(s=>/вариант/i.test(s.title));
-  const variants = hasMultipleVariants ? splitVariants(sections) : [{sections, total:grandTotal}];
-
-  // Hero cards: если несколько вариантов — показываем цены, иначе одну общую
-  let heroHTML='';
-  if(variants.length>1){
-    heroHTML=`<div class="hero-cards">`+variants.map((v,i)=>`
-      <div class="corp-card ${i===1?'dark':''}">
-        <div class="label">${v.title||('Вариант '+(i+1))}</div>
-        <div class="price">${fmt(v.total)} ₽</div>
-        <div class="hint">с НДС ${m.vat}%</div>
-      </div>`).join('')+`
-      <div class="corp-card">
-        <div class="label">Срок действия</div>
-        <div class="price">${m.validity} дн.</div>
-        <div class="hint">с даты получения</div>
-      </div>
-    </div>`;
-  }else{
-    heroHTML=`
+  const heroHTML=`
     <div class="hero-cards">
       <div class="corp-card">
         <div class="label">Общая стоимость</div>
@@ -515,22 +474,12 @@ function renderKP(data,m){
       </div>
       <div class="corp-card">
         <div class="label">Позиций</div>
-        <div class="price">${sections.reduce((a,s)=>a+s.rows.length,0)}</div>
+        <div class="price">${rowsCount}</div>
         <div class="hint">в ${sections.length} разделах</div>
       </div>
     </div>`;
-  }
 
-  // Основные таблицы
-  let tablesHTML='';
-  variants.forEach((v,i)=>{
-    if(variants.length>1){
-      tablesHTML+=`<h2 class="corp-section-title">${v.title||('Вариант '+(i+1))}</h2>`;
-    }
-    tablesHTML+=renderVariantTables(v.sections,m, v.total);
-  });
-
-  // Подвал
+  const tablesHTML=renderVariantTables(sections,m,grandTotal);
   const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(m.site)}`;
 
   return `
@@ -573,32 +522,11 @@ function renderKP(data,m){
   </div>`;
 }
 
-/* ---------- Разбиение на варианты ---------- */
-function splitVariants(sections){
-  // Группируем: каждый раз, когда встречаем раздел с «Вариант» в названии,
-  // начинаем новый вариант. Иначе объединяем пары МАТЕРИАЛЫ+РАБОТЫ.
-  const variants=[]; let cur=null;
-  sections.forEach(s=>{
-    if(/вариант/i.test(s.title)){
-      if(cur) variants.push(cur);
-      cur={title:s.title, sections:[s], total:0};
-    }else{
-      if(!cur) cur={title:'', sections:[], total:0};
-      cur.sections.push(s);
-    }
-    if(cur) cur.total=cur.sections.reduce((a,x)=>a+x.total,0);
-  });
-  if(cur) variants.push(cur);
-  // Считаем итог по варианту
-  variants.forEach(v=>v.total=v.sections.reduce((a,s)=>a+s.total,0));
-  return variants;
-}
-
-/* ---------- Таблицы одного варианта ---------- */
 function renderVariantTables(sections,m,total){
   let html='';
-  sections.forEach((s,si)=>{
-    html+=`<div class="table-wrap"><table>
+  sections.forEach(s=>{
+    html+=`<h2 class="corp-section-title">${s.title}</h2>
+    <div class="table-wrap"><table>
       <thead><tr>
         <th style="width:36px">№</th>
         <th>Наименование</th>
@@ -610,9 +538,9 @@ function renderVariantTables(sections,m,total){
         <th>Примечание</th>
       </tr></thead>
       <tbody>`;
-    s.rows.forEach(r=>{
+    s.rows.forEach((r,idx)=>{
       html+=`<tr>
-        <td class="center">${r.num||''}</td>
+        <td class="center">${r.num||idx+1}</td>
         <td>${r.name||''}</td>
         <td>${r.req||''}</td>
         <td class="num">${r.qty!==null?fmt(r.qty):''}</td>
@@ -622,7 +550,7 @@ function renderVariantTables(sections,m,total){
         <td>${r.note||''}</td>
       </tr>`;
     });
-    html+=`<tr class="total-row"><td colspan="6" style="text-align:right">Итого ${s.title}</td>
+    html+=`<tr class="total-row"><td colspan="6" style="text-align:right">Итого по разделу</td>
       <td class="num">${fmt(s.total)}</td><td></td></tr>`;
     html+=`</tbody></table></div>`;
   });
@@ -636,18 +564,16 @@ function renderVariantTables(sections,m,total){
   return html;
 }
 
-/* ---------- PDF ---------- */
 function downloadPDF(){
   if(!PARSED){ setStatus('err','Сначала сформируйте превью'); return; }
   const loader=document.getElementById('pdf-loader');
   loader.style.display='flex';
   const m=getMeta();
-  const filename=`КП_${m.company.replace(/[^\wа-яА-Я]/g,'')}_${m.kpNumber.replace(/[^\w\-]/g,'')}.pdf`;
+  const filename=`КП_ЛучСтройГрупп_${m.kpNumber.replace(/[^\w\-]/g,'')}.pdf`;
   const element=document.getElementById('pdf-content');
 
   const opt={
-    margin:[8,6,8,6],
-    filename,
+    margin:[8,6,8,6], filename,
     image:{type:'jpeg',quality:0.98},
     html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollY:0},
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
@@ -664,45 +590,28 @@ function downloadPDF(){
     });
 }
 
-/* ---------- Пример ---------- */
 function useSample(){
   const sample=[
-    ['№','Наименование','Требования','Кол-во','Ед.','Цена','Сумма','Примечание'],
-    ['МАТЕРИАЛЫ'],
-    [1,'Профильная труба (стойки)','100×100×3 мм, Ст3',30.8,'м.п.',975,30030,'8 стоек'],
-    [2,'Профильная труба (ригели, фермы)','60×40×3 мм',110.0,'м.п.',650,71500,'5 ферм пролетом 7 м'],
-    [3,'Профильная труба (обвязка, связи)','40×20×2 мм',123.0,'м.п.',450,55350,'прогоны кровли'],
-    [4,'Профильная труба (каркас ворот)','40×40×2 мм',46.0,'м.п.',450,20700,'2 проема, 2 калитки'],
-    [5,'Профлист стеновой С-21','0,5 мм, RAL 7024',119.4,'м²',1100,131296,'стены, ворота, калитки'],
-    [6,'Профлист кровельный С-21','0,5 мм, RAL 7024',68.6,'м²',1100,75482,'кровля 9×7 м'],
-    [7,'Лист гладкий на пол','1,5 мм',63.0,'м²',1450,91350,'742 кг'],
-    ['','Итого материалы','','','','',475708,''],
-    ['РАБОТЫ'],
-    [9,'Изготовление навеса комплектом','резка, сварка, КМД, окраска',1,'компл.',681716,681716,''],
-    [10,'Доставка на объект','Барыбино, длинномер',1,'рейс',69908,69908,''],
-    [11,'Сварка листов пола','',63,'м²',7000,441000,''],
-    [12,'Монтаж каркаса','',1,'компл.',298983,298983,''],
-    [13,'Монтаж обшивки и кровли','саморезы, доборные планки',188,'м²',2300,432400,''],
-    ['','Итого работы','','','','',1924007,'']
+    ['Позиция','Наименование и техническая характеристика','Тип, марка','Код','Завод-изготовитель','Ед. изм.','Кол-во','Масса ед., кг','Примечания','цена','всего'],
+    ['Водопровод хозяйственно-питьевой-противопожарный (В1)'],
+    ['','Кран шаровой, Ру=16 кгс/см², Ø15','11Б27п1','','','шт.','17','','','1 500 ₽','25 500 ₽'],
+    ['','Кран шаровой, Ру=16 кгс/см², Ø20','11Б27п1','','','шт.','2','','','1 500 ₽','3 000 ₽'],
+    ['','Фланец 80-16-02-1-ст.25-IV','ГОСТ 33259-2015','','','шт.','1','','на ббоде','1 000 ₽','1 000 ₽'],
+    ['Горячее водоснабжение (Т3, Т4)'],
+    ['','Кран шаровой, Ру=16 кгс/см², ø15','11Б27п1','','','шт.','55','','','1 500 ₽','82 500 ₽'],
+    ['','Трубопровод оцинкованный','ГОСТ 3262-75','Н-Ц-15Х2,8м.','','м.','120','','','1 500 ₽','180 000 ₽']
   ];
   finishParse(sample);
   setStatus('ok','Пример загружен. Нажмите «Сформировать превью».');
 }
 
-/* ---------- Слушатели ---------- */
-document.getElementById('dropzone').addEventListener('click',()=>{
-  document.getElementById('fileInput').click();
-});
+document.getElementById('dropzone').addEventListener('click',()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change',e=>{
   if(e.target.files[0]) handleFile(e.target.files[0]);
 });
 const dz=document.getElementById('dropzone');
-['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{
-  e.preventDefault(); dz.classList.add('drag');
-}));
-['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{
-  e.preventDefault(); dz.classList.remove('drag');
-}));
+['dragenter','dragover'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>dz.addEventListener(ev,e=>{e.preventDefault();dz.classList.remove('drag');}));
 dz.addEventListener('drop',e=>{
   const f=e.dataTransfer.files[0];
   if(f) handleFile(f);
@@ -711,7 +620,6 @@ document.getElementById('btnBuild').addEventListener('click',buildPreview);
 document.getElementById('btnPdf').addEventListener('click',downloadPDF);
 document.getElementById('btnPrint').addEventListener('click',()=>window.print());
 
-// Автоперестройка превью при изменении реквизитов
 ['kpNumber','kpDate','client','object','subtitle','vat','validity',
  'company','address','phone','email','site','director','manager'].forEach(id=>{
   document.getElementById(id).addEventListener('input',()=>{
