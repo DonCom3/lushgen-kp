@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЛучСтрой КП-Генератор</title>
+<title>ЛучСтрой КП-Генератор v3.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -17,11 +17,9 @@
 html,body{height:100%}
 body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
 
-/* ============ LAYOUT ============ */
-.app{display:grid;grid-template-columns:420px 1fr;height:100vh;overflow:hidden}
+.app{display:grid;grid-template-columns:440px 1fr;height:100vh;overflow:hidden}
 @media (max-width:900px){.app{grid-template-columns:1fr;height:auto;overflow:auto}}
 
-/* ============ SIDEBAR ============ */
 .sidebar{background:var(--graphite-dark);color:#fff;overflow-y:auto;padding:24px;border-right:3px solid var(--yellow)}
 .sidebar h2{font-size:18px;margin:0 0 4px;letter-spacing:.5px}
 .sidebar h2 span{color:var(--yellow)}
@@ -38,21 +36,13 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .field.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .field.row .field{margin:0}
 
-/* Dropzone */
-.dropzone{
-  border:2px dashed #5b6269;border-radius:12px;padding:22px 14px;text-align:center;
-  cursor:pointer;transition:.2s;background:#2b2f33;
-}
+.dropzone{border:2px dashed #5b6269;border-radius:12px;padding:22px 14px;text-align:center;cursor:pointer;transition:.2s;background:#2b2f33}
 .dropzone:hover,.dropzone.drag{border-color:var(--yellow);background:#33383e}
 .dropzone .icon{font-size:28px;color:var(--yellow)}
 .dropzone .text{font-size:13px;color:#cbd5e1;margin-top:6px}
 .dropzone .hint{font-size:11px;color:#8b9198;margin-top:4px}
 
-.btn{
-  width:100%;padding:11px 16px;border:none;border-radius:10px;
-  font-weight:700;font-size:13px;cursor:pointer;transition:.15s;
-  display:inline-flex;align-items:center;justify-content:center;gap:8px;
-}
+.btn{width:100%;padding:11px 16px;border:none;border-radius:10px;font-weight:700;font-size:13px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:8px}
 .btn.primary{background:var(--yellow);color:var(--graphite-dark)}
 .btn.primary:hover{background:var(--yellow-dark)}
 .btn.ghost{background:transparent;color:#cbd5e1;border:1px solid #4b5158}
@@ -65,35 +55,33 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .status.warn{background:rgba(245,158,11,.15);color:#fbbf24;display:block}
 .status.err{background:rgba(220,38,38,.15);color:#f87171;display:block}
 
-.mapping{font-size:11px;color:#9ca3af;margin-top:8px;display:none}
-.mapping.show{display:block}
-.mapping .map-row{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dashed #454b52}
-.mapping .map-row:last-child{border:none}
-.mapping .map-row b{color:var(--yellow);font-weight:500}
-
-/* ============ PREVIEW ============ */
-.preview-wrap{overflow-y:auto;background:var(--bg);padding:24px}
-.preview-toolbar{
-  position:sticky;top:0;z-index:50;
-  background:rgba(43,47,51,.95);backdrop-filter:blur(8px);
-  padding:10px 16px;border-radius:12px;margin-bottom:20px;
-  display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
-  border-bottom:2px solid var(--yellow);
+/* ===== Column mapper ===== */
+.mapper{display:none;margin-top:12px;font-size:12px}
+.mapper.show{display:block}
+.mapper .map-row{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;padding:5px 0;border-bottom:1px dashed #454b52}
+.mapper .map-row:last-child{border:none}
+.mapper .map-row label{color:#cbd5e1;font-size:12px}
+.mapper .map-row select{
+  width:100%;padding:6px 8px;border-radius:6px;border:1px solid #4b5158;
+  background:#2b2f33;color:#fff;font-size:12px;
 }
+.mapper .map-row select.found{border-color:#16a34a;background:#1e3a2a}
+.mapper .map-row select.missing{border-color:#dc2626;background:#3a1e1e}
+.mapper .hint{color:#8b9198;font-size:11px;margin-top:8px;line-height:1.4}
+
+/* ===== Preview ===== */
+.preview-wrap{overflow-y:auto;background:var(--bg);padding:24px}
+.preview-toolbar{position:sticky;top:0;z-index:50;background:rgba(43,47,51,.95);backdrop-filter:blur(8px);padding:10px 16px;border-radius:12px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:2px solid var(--yellow)}
 .preview-toolbar .info{color:#cbd5e1;font-size:12px}
 .preview-toolbar .info b{color:var(--yellow)}
 .preview-toolbar .actions{display:flex;gap:8px;flex-wrap:wrap}
 .preview-toolbar .actions .btn{width:auto;padding:9px 16px}
 
-.empty{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  min-height:60vh;color:#9ca3af;text-align:center;padding:40px;
-}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;color:#9ca3af;text-align:center;padding:40px}
 .empty .big{font-size:64px;color:var(--yellow);margin-bottom:12px}
 .empty h2{color:var(--graphite);margin:0 0 8px}
 .empty p{max-width:400px}
 
-/* ============ PDF CONTENT ============ */
 #pdf-content{background:var(--bg);border-radius:16px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.08)}
 .corp-header{background:linear-gradient(135deg,var(--graphite-dark),var(--graphite));color:#fff;padding:32px 36px;position:relative;overflow:hidden}
 .corp-header::after{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:var(--yellow);opacity:.15;border-radius:50%}
@@ -107,7 +95,6 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .corp-header .client b{color:var(--yellow)}
 
 .corp-body{padding:28px 36px}
-
 .hero-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:28px}
 .corp-card{background:#fff;border-radius:14px;padding:18px;border:1px solid var(--border);box-shadow:0 2px 12px rgba(0,0,0,.04)}
 .corp-card.dark{background:var(--graphite);color:#fff;border-color:var(--graphite)}
@@ -168,8 +155,8 @@ tr.grand-total td span{color:var(--yellow)}
 <div class="app">
 
   <aside class="sidebar">
-    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор</h2>
-    <div class="tagline">Загрузите расчёт — получите фирменное КП и PDF</div>
+    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v3.0</h2>
+    <div class="tagline">Загрузите любой Excel — сервис сам разберёт структуру</div>
 
     <div class="panel">
       <h3>1. Загрузка расчёта</h3>
@@ -180,40 +167,42 @@ tr.grand-total td span{color:var(--yellow)}
       </div>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
 
-      <div style="margin-top:12px">
-        <div class="field">
-          <label>…или вставьте данные из Excel</label>
-          <textarea id="pasteArea" rows="4" placeholder="Скопируйте ячейки и вставьте сюда (Ctrl+V)"></textarea>
-        </div>
-        <div class="btn-group">
-          <button class="btn ghost" onclick="useSample()">Пример</button>
-          <button class="btn ghost" onclick="parsePaste()">Разобрать</button>
-        </div>
+      <div class="btn-group">
+        <button class="btn ghost" onclick="useSample()">Пример</button>
+        <button class="btn ghost" onclick="resetAll()">Сбросить</button>
       </div>
 
       <div class="status" id="status"></div>
-      <div class="mapping" id="mapping"></div>
+    </div>
+
+    <div class="panel" id="mapperPanel" style="display:none">
+      <h3>2. Сопоставление колонок</h3>
+      <div class="mapper" id="mapper"></div>
+      <div class="hint">
+        Сервис сам распознал колонки. Если что-то не так — поправьте через списки.
+        В КП попадут только: №, Наименование, Кол-во, Ед., Цена, Сумма, Примечание.
+      </div>
     </div>
 
     <div class="panel">
-      <h3>2. Реквизиты КП</h3>
+      <h3>3. Реквизиты КП</h3>
       <div class="field row">
         <div class="field"><label>№ КП</label><input id="kpNumber" value="0810–2026/1"></div>
         <div class="field"><label>Дата</label><input id="kpDate" value="08.10.2026"></div>
       </div>
       <div class="field"><label>Заказчик</label><input id="client" value="ВсеИнструменты.ру"></div>
-      <div class="field"><label>Объект / заголовок</label><input id="object" value="Контейнерная площадка под ключ"></div>
+      <div class="field"><label>Объект / заголовок</label><input id="object" value="Коммерческое предложение"></div>
       <div class="field row">
         <div class="field"><label>НДС, %</label><input id="vat" type="number" value="22"></div>
         <div class="field"><label>Срок действия, дней</label><input id="validity" type="number" value="15"></div>
       </div>
       <div class="field"><label>Описание (подзаголовок)</label>
-        <textarea id="subtitle" rows="2">Производство и установка по эскизному проекту и ТЗ. Прозрачная смета, фиксированные цены.</textarea>
+        <textarea id="subtitle" rows="2">Прозрачная смета, фиксированные цены.</textarea>
       </div>
     </div>
 
     <div class="panel">
-      <h3>3. Реквизиты компании</h3>
+      <h3>4. Реквизиты компании</h3>
       <div class="field"><label>Юр. лицо</label><input id="company" value="ООО «ЛучСтрой Групп»"></div>
       <div class="field"><label>Адрес</label><input id="address" value="117420, Москва, Профсоюзная ул., д. 57, пом. 1/7"></div>
       <div class="field row">
@@ -228,7 +217,7 @@ tr.grand-total td span{color:var(--yellow)}
     </div>
 
     <div class="panel">
-      <h3>4. Экспорт</h3>
+      <h3>5. Экспорт</h3>
       <button class="btn primary" id="btnBuild" disabled>👁 Сформировать превью</button>
       <div class="btn-group" style="margin-top:8px">
         <button class="btn ghost" id="btnPdf" disabled>⬇ PDF</button>
@@ -249,7 +238,7 @@ tr.grand-total td span{color:var(--yellow)}
     <div id="emptyState" class="empty">
       <div class="big">📄</div>
       <h2>Превью появится здесь</h2>
-      <p>Загрузите Excel/CSV или нажмите «Пример» в панели слева, чтобы увидеть, как сервис оформляет КП.</p>
+      <p>Загрузите Excel/CSV или нажмите «Пример» слева. Сервис сам определит структуру.</p>
     </div>
 
     <div id="pdf-content" style="display:none"></div>
@@ -260,11 +249,33 @@ tr.grand-total td span{color:var(--yellow)}
 
 <script>
 /* ============================================================
-   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v2.0
+   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v3.0
+   Универсальный парсер: анализ содержимого + ручная корректировка
    ============================================================ */
 
-let PARSED = null;
+let RAW_ROWS = null;     // все строки из файла
+let HEADER_IDX = -1;     // индекс строки заголовков
+let COL_MAP = {};        // {name: idx, qty: idx, price: idx, sum: idx, num, unit, note, req, code, vendor}
+let PARSED = null;       // финальные данные после парсинга
 
+const FIELD_LABELS = {
+  num:    '№ / Позиция',
+  name:   'Наименование',
+  req:    'Тип / Марка / ГОСТ',
+  code:   'Код / Артикул',
+  vendor: 'Завод / Производитель',
+  unit:   'Ед. изм.',
+  qty:    'Кол-во',
+  price:  'Цена',
+  sum:    'Сумма',
+  note:   'Примечание',
+  mass:   'Масса',
+  skip:   '— пропустить —'
+};
+
+const REQUIRED = ['name','qty','price','sum'];
+
+/* ---------- Числа ---------- */
 function fmt(n){
   if(n===null||n===undefined||isNaN(n)) return '—';
   return Number(n).toLocaleString('ru-RU',{maximumFractionDigits:2});
@@ -282,97 +293,330 @@ function parseNum(v){
   return isNaN(n)?null:n;
 }
 
-const COL_PATTERNS={
-  num:    /^(№|no\.?|номер|п\/п|пп|позиция|поз\.?)$/i,
-  name:   /(наимен|назван|технич.*характер|описание)/i,
-  req:    /(требован|характер|специф|гост|марка|обознач|опросн)/i,
-  code:   /(^код|артикул)/i,
-  vendor: /(завод|изготов|производ)/i,
-  unit:   /^(ед\.?\s*изм|ед\.|единица|ед$)/i,
-  qty:    /(кол-?во|колич|объ[её]м)/i,
-  mass:   /(масса|вес)/i,
-  note:   /(примеч|коммент|note)/i,
-  price:  /(цена|стоимост[ьи] за|price)/i,
-  sum:    /(сумма|итого|всего|стоимост[ьи]$)/i
-};
-function detectColumns(headerRow){
-  const map={};
-  headerRow.forEach((cell,idx)=>{
-    const v=String(cell||'').trim();
-    if(!v) return;
-    for(const key in COL_PATTERNS){
-      if(map[key]===undefined && COL_PATTERNS[key].test(v)){ map[key]=idx; break; }
-    }
-  });
-  return map;
+/* ---------- Хелперы анализа ---------- */
+function isEmpty(v){
+  return v===null || v===undefined || String(v).trim()==='';
+}
+function isNumericCell(v){
+  if(typeof v==='number') return isFinite(v);
+  if(isEmpty(v)) return false;
+  const s=String(v).replace(/\u00a0/g,'').replace(/[₽руб]/gi,'').replace(/\s/g,'').replace(/,/g,'.');
+  return /^-?\d+(\.\d+)?$/.test(s);
+}
+function isTextCell(v){
+  if(isEmpty(v)) return false;
+  if(typeof v==='number') return false;
+  return /[а-яёa-z]/i.test(String(v));
+}
+function cellLen(v){
+  return isEmpty(v) ? 0 : String(v).trim().length;
 }
 
-function buildReq(r, colMap){
-  const parts=[];
-  if(colMap.req!==undefined    && r[colMap.req])    parts.push(String(r[colMap.req]).trim());
-  if(colMap.code!==undefined   && r[colMap.code])   parts.push(String(r[colMap.code]).trim());
-  if(colMap.vendor!==undefined && r[colMap.vendor]) parts.push(String(r[colMap.vendor]).trim());
-  return parts.join(' · ');
+/* ---------- Анализ колонок по содержимому ---------- */
+function analyzeColumn(rows, colIdx, fromRow, toRow){
+  let nums=0, texts=0, empties=0, total=0, sumVal=0, avgLen=0;
+  for(let i=fromRow;i<toRow;i++){
+    const v=(rows[i]||[])[colIdx];
+    total++;
+    if(isEmpty(v)) empties++;
+    else if(isNumericCell(v)){ nums++; sumVal+=parseNum(v)||0; }
+    else if(isTextCell(v)){ texts++; avgLen+=cellLen(v); }
+  }
+  const nonEmpty = total - empties;
+  return {
+    col:colIdx, total, nums, texts, empties,
+    nonEmpty,
+    numericRatio: nonEmpty ? nums/nonEmpty : 0,
+    textRatio:    nonEmpty ? texts/nonEmpty : 0,
+    avgLen: texts ? avgLen/texts : 0,
+    sum: sumVal
+  };
 }
 
-function parseRows(rows){
-  if(!rows||!rows.length) throw new Error('Пустые данные');
+/* ---------- Определение строки заголовков ---------- */
+function findHeaderRow(rows){
+  // Строка-кандидат: много текстовых ячеек в первых 15 строках
+  let best=-1, bestScore=0;
+  const limit=Math.min(15,rows.length);
+  for(let i=0;i<limit;i++){
+    const r=rows[i]||[];
+    if(!r.length) continue;
+    let textCount=0, nonEmpty=0, unique=new Set();
+    r.forEach(c=>{
+      if(!isEmpty(c)){
+        nonEmpty++;
+        unique.add(String(c).trim().toLowerCase());
+        if(isTextCell(c)) textCount++;
+      }
+    });
+    // Строка заголовка: >=40% текста, минимум 2 уникальных, >=3 непустых
+    const score = nonEmpty>=3 && textCount/nonEmpty>=0.4
+      ? textCount + unique.size * 0.5
+      : 0;
+    if(score>bestScore){ bestScore=score; best=i; }
+  }
+  return best;
+}
 
-  let headerIdx=-1, colMap=null;
-  for(let i=0;i<Math.min(10,rows.length);i++){
-    const m=detectColumns(rows[i]);
-    const matches=Object.keys(m).length;
-    if(m.name!==undefined && matches>=4 &&
-       (m.qty!==undefined||m.price!==undefined||m.sum!==undefined)){
-      headerIdx=i; colMap=m; break;
+/* ---------- Умное определение типа колонки ---------- */
+function guessColumnTypes(rows, headerIdx){
+  const header = rows[headerIdx]||[];
+  const bodyEnd = rows.length;
+  const bodyStart = headerIdx+1;
+  const numCols = header.length;
+
+  const analysis = [];
+  for(let c=0;c<numCols;c++){
+    analysis.push(analyzeColumn(rows, c, bodyStart, bodyEnd));
+  }
+
+  // Заголовки в нижнем регистре
+  const h = header.map(x=>String(x||'').trim().toLowerCase());
+
+  // Правила по ключевым словам
+  const keywordMap = {
+    num:    /(^№|^no\.?$|номер|позици|п\/п|поз\.?$)/i,
+    name:   /(наимен|назван|технич.*характер|описание|товар|услуг|работа|материал)/i,
+    req:    /(требован|гост|марка|тип|обознач|специф|опросн)/i,
+    code:   /(^код|артикул)/i,
+    vendor: /(завод|изготов|производ|бренд)/i,
+    unit:   /(ед\.?\s*изм|ед\.$|единиц|^ед$|^мера)/i,
+    qty:    /(кол-?во|колич|объ[её]м|количество)/i,
+    mass:   /(масса|вес)/i,
+    note:   /(примеч|коммент|note)/i,
+    price:  /(^цена|стоимост[ьи] за|price|расценка)/i,
+    sum:    /(сумма|^итого$|^всего$|стоимост[ьи]$|total)/i
+  };
+
+  const scores = {}; // {field: [ {col, score} ]}
+  for(const field in keywordMap) scores[field]=[];
+
+  for(let c=0;c<numCols;c++){
+    const a = analysis[c];
+    const hc = h[c]||'';
+
+    // Keyword-скоринг
+    for(const field in keywordMap){
+      if(keywordMap[field].test(hc)){
+        scores[field].push({col:c, score: 100 + a.textRatio*5, source:'header'});
+      }
+    }
+
+    // Контентный скоринг
+    // Наименование: длинный текст
+    if(a.textRatio>0.5 && a.avgLen>15 && a.nonEmpty>2){
+      scores.name.push({col:c, score: 40 + Math.min(a.avgLen,80)/2, source:'content'});
+    }
+    // Единица измерения: короткий текст
+    if(a.textRatio>0.6 && a.avgLen>0 && a.avgLen<6 && a.nonEmpty>3){
+      scores.unit.push({col:c, score: 30 + (5-a.avgLen)*3, source:'content'});
+    }
+    // Примечание: текст, но не длинный и не короткий
+    if(a.textRatio>0.5 && a.avgLen>=6 && a.avgLen<=60 && a.nonEmpty>0){
+      scores.note.push({col:c, score: 15, source:'content'});
+    }
+    // Числовые колонки
+    if(a.numericRatio>0.7 && a.nonEmpty>1){
+      // Кол-во: числа небольшие
+      const avg = a.sum/a.nonEmpty;
+      // Сумма: числа большие
+      if(avg>5000) scores.sum.push({col:c, score: 35, source:'content'});
+      // Цена: средние числа
+      if(avg>100 && avg<100000) scores.price.push({col:c, score: 30, source:'content'});
+      // Кол-во: маленькие числа или целые
+      if(avg<5000) scores.qty.push({col:c, score: 30, source:'content'});
+      // № / Позиция: короткие целые в начале
+      if(c===0 && avg<1000) scores.num.push({col:c, score: 25, source:'content'});
     }
   }
-  if(headerIdx===-1){
-    throw new Error('Не найдена строка заголовков. Нужны столбцы: Наименование, Кол-во, Цена или Сумма.');
+
+  // Выбираем лучшую колонку для каждого поля
+  const result = {};
+  const usedCols = new Set();
+  const order = ['num','name','unit','qty','price','sum','req','code','vendor','mass','note'];
+
+  for(const field of order){
+    const list = (scores[field]||[]).filter(x=>!usedCols.has(x.col));
+    if(!list.length) continue;
+    list.sort((a,b)=>b.score-a.score);
+    const best = list[0];
+    result[field] = best.col;
+    usedCols.add(best.col);
   }
 
-  const sections=[];
-  let current={title:'ПОЗИЦИИ', rows:[], total:0};
+  // Проверка: если sum не найден, но есть qty+price — не критично, вычислим
+  return result;
+}
+
+/* ---------- Определение разделов ---------- */
+function detectSections(rows, headerIdx, colMap){
+  // Раздел = строка, где:
+  // - заполнена только одна колонка (обычно первая)
+  // - или заполнена первая + мало других
+  // - и это не строка заголовков
+  const nameCol = colMap.name;
+  const qtyCol  = colMap.qty;
+  const sumCol  = colMap.sum;
+  const priceCol= colMap.price;
+
+  const sections = [];
+  let current = {title:'ПОЗИЦИИ', rows:[], total:0};
 
   for(let i=headerIdx+1;i<rows.length;i++){
-    const r=rows[i]||[];
-    const first   = String(r[0]||'').trim();
-    const nameVal = colMap.name!==undefined ? String(r[colMap.name]||'').trim() : '';
+    const r = rows[i]||[];
+    const nameVal = nameCol!==undefined ? String(r[nameCol]||'').trim() : '';
+    const firstVal= String(r[0]||'').trim();
 
-    if(!first && !nameVal) continue;
+    // Полностью пустая строка
+    const nonEmpty = r.filter(c=>!isEmpty(c)).length;
+    if(nonEmpty===0) continue;
 
-    if(!nameVal){
+    // Определяем: это строка-раздел или позиция?
+    // Если Наименование пустое, но есть текст в первой колонке — раздел
+    if(!nameVal && firstVal && isTextCell(firstVal)){
       if(current.rows.length) sections.push(current);
-      current={title:first.toUpperCase(), rows:[], total:0};
+      current = {title:firstVal.toUpperCase(), rows:[], total:0};
       continue;
     }
 
-    const qty   = colMap.qty   !==undefined ? parseNum(r[colMap.qty])   : null;
-    const price = colMap.price !==undefined ? parseNum(r[colMap.price]) : null;
-    let   sum   = colMap.sum   !==undefined ? parseNum(r[colMap.sum])   : null;
-    if(sum===null && qty!==null && price!==null) sum=qty*price;
+    // Если наименования нет вообще и первая колонка пустая — пропускаем
+    if(!nameVal && !firstVal) continue;
 
-    current.rows.push({
-      num:   colMap.num!==undefined ? String(r[colMap.num]||'').trim() : String(current.rows.length+1),
-      name:  nameVal,
-      req:   buildReq(r, colMap),
-      qty,
-      unit:  colMap.unit!==undefined ? String(r[colMap.unit]||'').trim() : '',
-      price,
-      sum,
-      note:  colMap.note!==undefined ? String(r[colMap.note]||'').trim() : ''
-    });
+    // Если название есть — это позиция
+    if(nameVal){
+      const qty   = qtyCol   !==undefined ? parseNum(r[qtyCol])   : null;
+      const price = priceCol !==undefined ? parseNum(r[priceCol]) : null;
+      let   sum   = sumCol   !==undefined ? parseNum(r[sumCol])   : null;
+      if(sum===null && qty!==null && price!==null) sum=qty*price;
+
+      current.rows.push({
+        num:  colMap.num!==undefined ? String(r[colMap.num]||'').trim() : String(current.rows.length+1),
+        name: nameVal,
+        req:  colMap.req!==undefined ? String(r[colMap.req]||'').trim() : '',
+        qty,
+        unit: colMap.unit!==undefined ? String(r[colMap.unit]||'').trim() : '',
+        price,
+        sum,
+        note: colMap.note!==undefined ? String(r[colMap.note]||'').trim() : ''
+      });
+      continue;
+    }
+
+    // Прочие строки (например, «Итого ...») — пропускаем, пересчитаем сами
   }
   if(current.rows.length) sections.push(current);
 
   sections.forEach(s=>{
-    if(!s.total) s.total=s.rows.reduce((a,r)=>a+(r.sum||0),0);
+    s.total = s.rows.reduce((a,r)=>a+(r.sum||0),0);
   });
-  const grandTotal=sections.reduce((a,s)=>a+s.total,0);
 
-  return {colMap, sections, grandTotal, headerIdx};
+  return sections;
 }
 
+/* ---------- Парсинг и построение ---------- */
+function parseAndBuild(){
+  if(!RAW_ROWS) return;
+  if(HEADER_IDX<0){
+    setStatus('err','Не удалось найти строку заголовков');
+    return;
+  }
+
+  // Берём colMap из UI
+  const colMap = {};
+  document.querySelectorAll('.mapper select').forEach(sel=>{
+    const field = sel.dataset.field;
+    const val = sel.value;
+    if(val!=='' && val!=='skip') colMap[field] = parseInt(val,10);
+  });
+
+  COL_MAP = colMap;
+
+  const sections = detectSections(RAW_ROWS, HEADER_IDX, colMap);
+  const grandTotal = sections.reduce((a,s)=>a+s.total,0);
+  const rowsCount = sections.reduce((a,s)=>a+s.rows.length,0);
+
+  PARSED = {sections, grandTotal, colMap, headerIdx:HEADER_IDX};
+
+  if(rowsCount===0){
+    setStatus('err','Не удалось распознать ни одной позиции. Проверьте сопоставление колонок.');
+    document.getElementById('btnBuild').disabled=true;
+    return;
+  }
+
+  setStatus('ok',`Распознано: ${sections.length} раздел(ов), ${rowsCount} позиций, итого ${fmt(grandTotal)} ₽`);
+  document.getElementById('btnBuild').disabled=false;
+}
+
+/* ---------- Построение UI сопоставления ---------- */
+function buildMapperUI(rows, headerIdx){
+  const header = rows[headerIdx]||[];
+  const numCols = header.length;
+  const detected = guessColumnTypes(rows, headerIdx);
+
+  const mapper = document.getElementById('mapper');
+  mapper.innerHTML='';
+
+  const order = ['num','name','req','code','vendor','unit','qty','price','sum','mass','note'];
+
+  order.forEach(field=>{
+    const row = document.createElement('div');
+    row.className='map-row';
+
+    const label = document.createElement('label');
+    label.textContent = FIELD_LABELS[field];
+    row.appendChild(label);
+
+    const sel = document.createElement('select');
+    sel.dataset.field = field;
+
+    // Опция «пропустить»
+    const optSkip = document.createElement('option');
+    optSkip.value='skip';
+    optSkip.textContent = FIELD_LABELS.skip;
+    sel.appendChild(optSkip);
+
+    // Все колонки
+    for(let c=0;c<numCols;c++){
+      const opt = document.createElement('option');
+      opt.value = c;
+      const hName = String(header[c]||'').trim();
+      const sample = (()=>{
+        for(let i=headerIdx+1;i<Math.min(headerIdx+8,rows.length);i++){
+          const v=(rows[i]||[])[c];
+          if(!isEmpty(v)) return String(v).slice(0,25);
+        }
+        return '';
+      })();
+      opt.textContent = `${String.fromCharCode(65+c)} — ${hName || '(пусто)'}${sample?' · '+sample:''}`;
+      sel.appendChild(opt);
+    }
+
+    // Устанавливаем автоопределение
+    if(detected[field]!==undefined){
+      sel.value = detected[field];
+      sel.classList.add('found');
+    } else {
+      sel.value = 'skip';
+      if(REQUIRED.includes(field)) sel.classList.add('missing');
+    }
+
+    sel.addEventListener('change',()=>{
+      // Обновляем класс
+      sel.classList.remove('found','missing');
+      if(sel.value!=='skip') sel.classList.add('found');
+      else if(REQUIRED.includes(field)) sel.classList.add('missing');
+      parseAndBuild();
+    });
+
+    row.appendChild(sel);
+    mapper.appendChild(row);
+  });
+
+  document.getElementById('mapperPanel').style.display='block';
+  document.getElementById('mapper').classList.add('show');
+}
+
+/* ---------- Обработка файла ---------- */
 function handleFile(file){
   setStatus('warn','Читаем файл…');
   const reader=new FileReader();
@@ -382,52 +626,33 @@ function handleFile(file){
       const wb=XLSX.read(data,{type:'array'});
       const ws=wb.Sheets[wb.SheetNames[0]];
       const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
-      finishParse(rows);
+      processRows(rows);
     }catch(err){
       console.error(err);
-      setStatus('err','Ошибка чтения файла: '+err.message);
+      setStatus('err','Ошибка чтения: '+err.message);
     }
   };
   reader.readAsArrayBuffer(file);
 }
 
-function parsePaste(){
-  const text=document.getElementById('pasteArea').value.trim();
-  if(!text){ setStatus('err','Вставьте данные в поле'); return; }
-  const rows=text.split(/\r?\n/).map(line=>line.split('\t'));
-  finishParse(rows);
-}
-
-function finishParse(rows){
-  try{
-    const res=parseRows(rows);
-    PARSED=res;
-
-    const m=res.colMap;
-    const names={num:'№ / Позиция',name:'Наименование',req:'Тип / Марка',code:'Код',
-                 vendor:'Завод',unit:'Ед. изм.',qty:'Кол-во',mass:'Масса',
-                 note:'Примечание',price:'Цена',sum:'Сумма'};
-    let html='';
-    for(const k in names){
-      html+=`<div class="map-row"><span>${names[k]}</span><b>${m[k]!==undefined?'✓ колонка '+(m[k]+1):'—'}</b></div>`;
-    }
-    const mp=document.getElementById('mapping');
-    mp.innerHTML=html; mp.classList.add('show');
-
-    let rowsCount=0; res.sections.forEach(s=>rowsCount+=s.rows.length);
-    setStatus('ok',`Распознано: ${res.sections.length} раздел(ов), ${rowsCount} позиций, итого ${fmt(res.grandTotal)} ₽`);
-    document.getElementById('btnBuild').disabled=false;
-  }catch(err){
-    console.error(err);
-    setStatus('err',err.message);
+function processRows(rows){
+  RAW_ROWS = rows;
+  HEADER_IDX = findHeaderRow(rows);
+  if(HEADER_IDX<0){
+    setStatus('err','Не найдена строка заголовков. Проверьте файл — есть ли шапка с названиями колонок.');
+    return;
   }
+  buildMapperUI(rows, HEADER_IDX);
+  parseAndBuild();
 }
 
+/* ---------- Статус ---------- */
 function setStatus(type,msg){
   const el=document.getElementById('status');
   el.className='status '+type; el.textContent=msg;
 }
 
+/* ---------- Мета ---------- */
 function getMeta(){
   const g=id=>document.getElementById(id).value.trim();
   return {
@@ -440,6 +665,7 @@ function getMeta(){
   };
 }
 
+/* ---------- Превью ---------- */
 function buildPreview(){
   if(!PARSED){ setStatus('err','Сначала загрузите расчёт'); return; }
   const m=getMeta();
@@ -453,7 +679,7 @@ function buildPreview(){
   document.getElementById('btnPrint').disabled=false;
   document.getElementById('btnPdf2').disabled=false;
   document.getElementById('btnPrint2').disabled=false;
-  setStatus('ok','Превью сформировано. Можно скачать PDF.');
+  setStatus('ok','Превью сформировано');
 }
 
 function renderKP(data,m){
@@ -492,12 +718,10 @@ function renderKP(data,m){
     <div class="subtitle">${m.subtitle}</div>
     <div class="client">Заказчик: <b>${m.client}</b></div>
   </div>
-
   <div class="corp-body">
     ${heroHTML}
     ${tablesHTML}
   </div>
-
   <div class="corp-footer">
     <div class="grid">
       <div>
@@ -554,7 +778,6 @@ function renderVariantTables(sections,m,total){
       <td class="num">${fmt(s.total)}</td><td></td></tr>`;
     html+=`</tbody></table></div>`;
   });
-
   html+=`<div class="table-wrap"><table>
     <tbody>
       <tr class="grand-total"><td style="text-align:right">ИТОГО с НДС ${m.vat}%</td>
@@ -564,6 +787,7 @@ function renderVariantTables(sections,m,total){
   return html;
 }
 
+/* ---------- PDF ---------- */
 function downloadPDF(){
   if(!PARSED){ setStatus('err','Сначала сформируйте превью'); return; }
   const loader=document.getElementById('pdf-loader');
@@ -590,21 +814,38 @@ function downloadPDF(){
     });
 }
 
+/* ---------- Пример ---------- */
 function useSample(){
   const sample=[
-    ['Позиция','Наименование и техническая характеристика','Тип, марка','Код','Завод-изготовитель','Ед. изм.','Кол-во','Масса ед., кг','Примечания','цена','всего'],
-    ['Водопровод хозяйственно-питьевой-противопожарный (В1)'],
-    ['','Кран шаровой, Ру=16 кгс/см², Ø15','11Б27п1','','','шт.','17','','','1 500 ₽','25 500 ₽'],
-    ['','Кран шаровой, Ру=16 кгс/см², Ø20','11Б27п1','','','шт.','2','','','1 500 ₽','3 000 ₽'],
-    ['','Фланец 80-16-02-1-ст.25-IV','ГОСТ 33259-2015','','','шт.','1','','на ббоде','1 000 ₽','1 000 ₽'],
-    ['Горячее водоснабжение (Т3, Т4)'],
-    ['','Кран шаровой, Ру=16 кгс/см², ø15','11Б27п1','','','шт.','55','','','1 500 ₽','82 500 ₽'],
-    ['','Трубопровод оцинкованный','ГОСТ 3262-75','Н-Ц-15Х2,8м.','','м.','120','','','1 500 ₽','180 000 ₽']
+    ['№','Наименование','ГОСТ / ТУ','Кол-во','Ед.','Цена','Сумма','Примечание'],
+    ['Водопровод'],
+    ['','Кран шаровой Ø15','11Б27п1','17','шт.','1 500 ₽','25 500 ₽',''],
+    ['','Трубопровод оцинкованный','ГОСТ 3262-75','120','м.','1 500 ₽','180 000 ₽',''],
+    ['Канализация'],
+    ['','Трубы ПП Ø110','ГОСТ 32414-2013','115','м.','2 000 ₽','230 000 ₽',''],
+    ['','Отвод ПП 45°','ГОСТ 32414-2013','58','шт.','1 000 ₽','58 000 ₽','']
   ];
-  finishParse(sample);
-  setStatus('ok','Пример загружен. Нажмите «Сформировать превью».');
+  processRows(sample);
+  setStatus('ok','Пример загружен');
 }
 
+function resetAll(){
+  RAW_ROWS=null; HEADER_IDX=-1; COL_MAP={}; PARSED=null;
+  document.getElementById('mapper').innerHTML='';
+  document.getElementById('mapperPanel').style.display='none';
+  document.getElementById('pdf-content').style.display='none';
+  document.getElementById('emptyState').style.display='flex';
+  document.getElementById('btnBuild').disabled=true;
+  document.getElementById('btnPdf').disabled=true;
+  document.getElementById('btnPrint').disabled=true;
+  document.getElementById('btnPdf2').disabled=true;
+  document.getElementById('btnPrint2').disabled=true;
+  document.getElementById('toolbarInfo').textContent='Загрузите расчёт, чтобы увидеть превью';
+  document.getElementById('fileInput').value='';
+  setStatus('ok','Сброшено');
+}
+
+/* ---------- Слушатели ---------- */
 document.getElementById('dropzone').addEventListener('click',()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change',e=>{
   if(e.target.files[0]) handleFile(e.target.files[0]);
