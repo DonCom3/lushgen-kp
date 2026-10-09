@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЛучСтрой КП-Генератор v3.0</title>
+<title>ЛучСтрой КП-Генератор v4.0</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -55,19 +55,34 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .status.warn{background:rgba(245,158,11,.15);color:#fbbf24;display:block}
 .status.err{background:rgba(220,38,38,.15);color:#f87171;display:block}
 
-/* ===== Column mapper ===== */
 .mapper{display:none;margin-top:12px;font-size:12px}
 .mapper.show{display:block}
 .mapper .map-row{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;padding:5px 0;border-bottom:1px dashed #454b52}
 .mapper .map-row:last-child{border:none}
 .mapper .map-row label{color:#cbd5e1;font-size:12px}
-.mapper .map-row select{
-  width:100%;padding:6px 8px;border-radius:6px;border:1px solid #4b5158;
-  background:#2b2f33;color:#fff;font-size:12px;
-}
+.mapper .map-row select{width:100%;padding:6px 8px;border-radius:6px;border:1px solid #4b5158;background:#2b2f33;color:#fff;font-size:12px}
 .mapper .map-row select.found{border-color:#16a34a;background:#1e3a2a}
 .mapper .map-row select.missing{border-color:#dc2626;background:#3a1e1e}
 .mapper .hint{color:#8b9198;font-size:11px;margin-top:8px;line-height:1.4}
+
+/* ===== История ===== */
+.history-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto}
+.history-item{background:#2b2f33;border:1px solid #454b52;border-radius:10px;padding:10px 12px;font-size:12px}
+.history-item:hover{border-color:var(--yellow)}
+.history-item .hi-top{display:flex;justify-content:space-between;gap:8px;align-items:baseline;margin-bottom:4px}
+.history-item .hi-num{font-weight:700;color:var(--yellow);font-size:12px}
+.history-item .hi-date{color:#8b9198;font-size:11px}
+.history-item .hi-client{color:#cbd5e1;font-size:12px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-item .hi-total{color:#fff;font-weight:600;font-size:13px}
+.history-item .hi-actions{display:flex;gap:6px;margin-top:8px}
+.history-item .hi-actions button{
+  flex:1;padding:5px 8px;border:none;border-radius:6px;font-size:11px;
+  font-weight:600;cursor:pointer;background:#454b52;color:#e5e7eb;
+}
+.history-item .hi-actions button:hover{background:var(--yellow);color:var(--graphite-dark)}
+.history-item .hi-actions button.danger:hover{background:#dc2626;color:#fff}
+.history-empty{color:#8b9198;font-size:12px;text-align:center;padding:16px 0}
+.history-info{color:#8b9198;font-size:11px;margin-top:8px;text-align:center}
 
 /* ===== Preview ===== */
 .preview-wrap{overflow-y:auto;background:var(--bg);padding:24px}
@@ -155,7 +170,7 @@ tr.grand-total td span{color:var(--yellow)}
 <div class="app">
 
   <aside class="sidebar">
-    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v3.0</h2>
+    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v4.0</h2>
     <div class="tagline">Загрузите любой Excel — сервис сам разберёт структуру</div>
 
     <div class="panel">
@@ -166,22 +181,17 @@ tr.grand-total td span{color:var(--yellow)}
         <div class="hint">.xlsx · .xls · .csv</div>
       </div>
       <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" hidden>
-
       <div class="btn-group">
         <button class="btn ghost" onclick="useSample()">Пример</button>
         <button class="btn ghost" onclick="resetAll()">Сбросить</button>
       </div>
-
       <div class="status" id="status"></div>
     </div>
 
     <div class="panel" id="mapperPanel" style="display:none">
       <h3>2. Сопоставление колонок</h3>
       <div class="mapper" id="mapper"></div>
-      <div class="hint">
-        Сервис сам распознал колонки. Если что-то не так — поправьте через списки.
-        В КП попадут только: №, Наименование, Кол-во, Ед., Цена, Сумма, Примечание.
-      </div>
+      <div class="hint">Сервис распознал колонки. Если что-то не так — поправьте через списки.</div>
     </div>
 
     <div class="panel">
@@ -220,9 +230,18 @@ tr.grand-total td span{color:var(--yellow)}
       <h3>5. Экспорт</h3>
       <button class="btn primary" id="btnBuild" disabled>👁 Сформировать превью</button>
       <div class="btn-group" style="margin-top:8px">
-        <button class="btn ghost" id="btnPdf" disabled>⬇ PDF</button>
+        <button class="btn ghost" id="btnPdf" disabled>⬇ PDF (сохранить в историю)</button>
         <button class="btn ghost" id="btnPrint" disabled>🖨 Печать</button>
       </div>
+    </div>
+
+    <div class="panel">
+      <h3>6. История КП <span id="historyCount" style="color:#8b9198;font-weight:400;text-transform:none;font-size:11px"></span></h3>
+      <div class="history-list" id="historyList">
+        <div class="history-empty">Здесь появятся сохранённые КП</div>
+      </div>
+      <button class="btn ghost" style="margin-top:10px" onclick="clearHistory()">🗑 Очистить всю историю</button>
+      <div class="history-info" id="historyInfo"></div>
     </div>
   </aside>
 
@@ -249,33 +268,242 @@ tr.grand-total td span{color:var(--yellow)}
 
 <script>
 /* ============================================================
-   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v3.0
-   Универсальный парсер: анализ содержимого + ручная корректировка
+   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v4.0
+   + История PDF в IndexedDB
    ============================================================ */
 
-let RAW_ROWS = null;     // все строки из файла
-let HEADER_IDX = -1;     // индекс строки заголовков
-let COL_MAP = {};        // {name: idx, qty: idx, price: idx, sum: idx, num, unit, note, req, code, vendor}
-let PARSED = null;       // финальные данные после парсинга
+/* ==================== IndexedDB ==================== */
+const DB_NAME = 'luchsg_kp';
+const DB_VERSION = 1;
+const STORE_NAME = 'pdfs';
+let db = null;
+
+function openDB(){
+  return new Promise((resolve,reject)=>{
+    if(db) return resolve(db);
+    const req = indexedDB.open(DB_NAME, DB_VERSION);
+    req.onupgradeneeded = e=>{
+      const d = e.target.result;
+      if(!d.objectStoreNames.contains(STORE_NAME)){
+        const store = d.createObjectStore(STORE_NAME, {keyPath:'id'});
+        store.createIndex('savedAt', 'savedAt');
+      }
+    };
+    req.onsuccess = e=>{ db=e.target.result; resolve(db); };
+    req.onerror = e=>reject(e.target.error);
+  });
+}
+
+async function savePdfToHistory(blob, meta, parsed){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    const record = {
+      id: (meta.kpNumber||'КП') + '_' + Date.now(),
+      savedAt: Date.now(),
+      kpNumber: meta.kpNumber,
+      date: meta.date,
+      client: meta.client,
+      object: meta.object,
+      total: parsed.grandTotal,
+      vat: meta.vat,
+      meta: meta,
+      parsed: parsed,
+      pdfBlob: blob
+    };
+    store.put(record);
+    tx.oncomplete=()=>resolve(record);
+    tx.onerror=e=>reject(e.target.error);
+  });
+}
+
+async function getAllHistory(){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.getAll();
+    req.onsuccess = ()=>{
+      const items = req.result || [];
+      items.sort((a,b)=>b.savedAt - a.savedAt);
+      resolve(items);
+    };
+    req.onerror = e=>reject(e.target.error);
+  });
+}
+
+async function getHistory(id){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readonly');
+    const store = tx.objectStore(STORE_NAME);
+    const req = store.get(id);
+    req.onsuccess=()=>resolve(req.result);
+    req.onerror=e=>reject(e.target.error);
+  });
+}
+
+async function deleteHistory(id){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.delete(id);
+    tx.oncomplete=()=>resolve();
+    tx.onerror=e=>reject(e.target.error);
+  });
+}
+
+async function clearHistoryDB(){
+  const db = await openDB();
+  return new Promise((resolve,reject)=>{
+    const tx = db.transaction(STORE_NAME,'readwrite');
+    const store = tx.objectStore(STORE_NAME);
+    store.clear();
+    tx.oncomplete=()=>resolve();
+    tx.onerror=e=>reject(e.target.error);
+  });
+}
+
+/* ==================== История UI ==================== */
+function fmtDate(ts){
+  const d = new Date(ts);
+  const pad = n=>String(n).padStart(2,'0');
+  return `${pad(d.getDate())}.${pad(d.getMonth()+1)}.${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function fmtBytes(b){
+  if(b<1024) return b+' Б';
+  if(b<1024*1024) return (b/1024).toFixed(1)+' КБ';
+  return (b/1024/1024).toFixed(2)+' МБ';
+}
+
+async function renderHistory(){
+  const list = document.getElementById('historyList');
+  try{
+    const items = await getAllHistory();
+    document.getElementById('historyCount').textContent = items.length ? `(${items.length})` : '';
+
+    if(!items.length){
+      list.innerHTML = '<div class="history-empty">Здесь появятся сохранённые КП</div>';
+      document.getElementById('historyInfo').textContent='';
+      return;
+    }
+
+    let totalSize=0;
+    list.innerHTML='';
+    items.forEach(it=>{
+      totalSize += it.pdfBlob ? it.pdfBlob.size : 0;
+      const el = document.createElement('div');
+      el.className='history-item';
+      el.innerHTML = `
+        <div class="hi-top">
+          <span class="hi-num">№ ${it.kpNumber||'—'}</span>
+          <span class="hi-date">${fmtDate(it.savedAt)}</span>
+        </div>
+        <div class="hi-client">${it.client||'—'}</div>
+        <div class="hi-total">${fmt(it.total)} ₽ · НДС ${it.vat}%</div>
+        <div class="hi-actions">
+          <button data-act="open">⬇ PDF</button>
+          <button data-act="reload">↻ Данные</button>
+          <button data-act="delete" class="danger">🗑</button>
+        </div>`;
+      el.querySelector('[data-act="open"]').onclick = ()=>openHistoryPdf(it.id);
+      el.querySelector('[data-act="reload"]').onclick = ()=>reloadFromHistory(it.id);
+      el.querySelector('[data-act="delete"]').onclick = ()=>removeHistory(it.id);
+      list.appendChild(el);
+    });
+
+    document.getElementById('historyInfo').textContent =
+      `Всего: ${items.length} · ${fmtBytes(totalSize)}`;
+  }catch(err){
+    console.error(err);
+    list.innerHTML = '<div class="history-empty">Ошибка чтения истории</div>';
+  }
+}
+
+async function openHistoryPdf(id){
+  try{
+    const it = await getHistory(id);
+    if(!it || !it.pdfBlob){ setStatus('err','Файл не найден'); return; }
+    const url = URL.createObjectURL(it.pdfBlob);
+    const a = document.createElement('a');
+    a.href=url;
+    a.download = `КП_${(it.kpNumber||'ЛучСтройГрупп').replace(/[^\w\-]/g,'')}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+    setStatus('ok','PDF открыт из истории');
+  }catch(err){
+    console.error(err);
+    setStatus('err','Не удалось открыть PDF');
+  }
+}
+
+async function reloadFromHistory(id){
+  try{
+    const it = await getHistory(id);
+    if(!it || !it.meta){ setStatus('err','Данные не найдены'); return; }
+    // Восстанавливаем реквизиты
+    const m = it.meta;
+    ['kpNumber','kpDate','client','object','subtitle','vat','validity',
+     'company','address','phone','email','site','director','manager'].forEach(k=>{
+      const el = document.getElementById(k);
+      if(el && m[k]!==undefined) el.value = m[k];
+    });
+    // Восстанавливаем данные парсинга
+    if(it.parsed){
+      PARSED = it.parsed;
+      document.getElementById('btnBuild').disabled = false;
+      buildPreview();
+      setStatus('ok','КП восстановлен из истории');
+      window.scrollTo({top:0, behavior:'smooth'});
+    }else{
+      setStatus('warn','PDF есть, но исходные данные не сохранены');
+    }
+  }catch(err){
+    console.error(err);
+    setStatus('err','Не удалось восстановить');
+  }
+}
+
+async function removeHistory(id){
+  if(!confirm('Удалить это КП из истории?')) return;
+  try{
+    await deleteHistory(id);
+    await renderHistory();
+    setStatus('ok','Удалено из истории');
+  }catch(err){
+    console.error(err);
+  }
+}
+
+async function clearHistory(){
+  if(!confirm('Удалить ВСЮ историю КП? Действие необратимо.')) return;
+  try{
+    await clearHistoryDB();
+    await renderHistory();
+    setStatus('ok','История очищена');
+  }catch(err){
+    console.error(err);
+  }
+}
+
+/* ==================== Парсер ==================== */
+let RAW_ROWS = null;
+let HEADER_IDX = -1;
+let COL_MAP = {};
+let PARSED = null;
 
 const FIELD_LABELS = {
-  num:    '№ / Позиция',
-  name:   'Наименование',
-  req:    'Тип / Марка / ГОСТ',
-  code:   'Код / Артикул',
-  vendor: 'Завод / Производитель',
-  unit:   'Ед. изм.',
-  qty:    'Кол-во',
-  price:  'Цена',
-  sum:    'Сумма',
-  note:   'Примечание',
-  mass:   'Масса',
-  skip:   '— пропустить —'
+  num:'№ / Позиция', name:'Наименование', req:'Тип / Марка / ГОСТ',
+  code:'Код / Артикул', vendor:'Завод / Производитель', unit:'Ед. изм.',
+  qty:'Кол-во', price:'Цена', sum:'Сумма', note:'Примечание',
+  mass:'Масса', skip:'— пропустить —'
 };
-
 const REQUIRED = ['name','qty','price','sum'];
 
-/* ---------- Числа ---------- */
 function fmt(n){
   if(n===null||n===undefined||isNaN(n)) return '—';
   return Number(n).toLocaleString('ru-RU',{maximumFractionDigits:2});
@@ -283,20 +511,11 @@ function fmt(n){
 function parseNum(v){
   if(v===null||v===undefined||v==='') return null;
   if(typeof v==='number') return v;
-  let s=String(v)
-    .replace(/\u00a0/g,'')
-    .replace(/[₽руб]/gi,'')
-    .replace(/\s/g,'')
-    .replace(/,/g,'.')
-    .replace(/[^0-9.\-]/g,'');
+  let s=String(v).replace(/\u00a0/g,'').replace(/[₽руб]/gi,'').replace(/\s/g,'').replace(/,/g,'.').replace(/[^0-9.\-]/g,'');
   const n=parseFloat(s);
   return isNaN(n)?null:n;
 }
-
-/* ---------- Хелперы анализа ---------- */
-function isEmpty(v){
-  return v===null || v===undefined || String(v).trim()==='';
-}
+function isEmpty(v){ return v===null||v===undefined||String(v).trim()===''; }
 function isNumericCell(v){
   if(typeof v==='number') return isFinite(v);
   if(isEmpty(v)) return false;
@@ -308,11 +527,8 @@ function isTextCell(v){
   if(typeof v==='number') return false;
   return /[а-яёa-z]/i.test(String(v));
 }
-function cellLen(v){
-  return isEmpty(v) ? 0 : String(v).trim().length;
-}
+function cellLen(v){ return isEmpty(v) ? 0 : String(v).trim().length; }
 
-/* ---------- Анализ колонок по содержимому ---------- */
 function analyzeColumn(rows, colIdx, fromRow, toRow){
   let nums=0, texts=0, empties=0, total=0, sumVal=0, avgLen=0;
   for(let i=fromRow;i<toRow;i++){
@@ -324,8 +540,7 @@ function analyzeColumn(rows, colIdx, fromRow, toRow){
   }
   const nonEmpty = total - empties;
   return {
-    col:colIdx, total, nums, texts, empties,
-    nonEmpty,
+    col:colIdx, total, nums, texts, empties, nonEmpty,
     numericRatio: nonEmpty ? nums/nonEmpty : 0,
     textRatio:    nonEmpty ? texts/nonEmpty : 0,
     avgLen: texts ? avgLen/texts : 0,
@@ -333,9 +548,7 @@ function analyzeColumn(rows, colIdx, fromRow, toRow){
   };
 }
 
-/* ---------- Определение строки заголовков ---------- */
 function findHeaderRow(rows){
-  // Строка-кандидат: много текстовых ячеек в первых 15 строках
   let best=-1, bestScore=0;
   const limit=Math.min(15,rows.length);
   for(let i=0;i<limit;i++){
@@ -349,7 +562,6 @@ function findHeaderRow(rows){
         if(isTextCell(c)) textCount++;
       }
     });
-    // Строка заголовка: >=40% текста, минимум 2 уникальных, >=3 непустых
     const score = nonEmpty>=3 && textCount/nonEmpty>=0.4
       ? textCount + unique.size * 0.5
       : 0;
@@ -358,7 +570,6 @@ function findHeaderRow(rows){
   return best;
 }
 
-/* ---------- Умное определение типа колонки ---------- */
 function guessColumnTypes(rows, headerIdx){
   const header = rows[headerIdx]||[];
   const bodyEnd = rows.length;
@@ -366,14 +577,10 @@ function guessColumnTypes(rows, headerIdx){
   const numCols = header.length;
 
   const analysis = [];
-  for(let c=0;c<numCols;c++){
-    analysis.push(analyzeColumn(rows, c, bodyStart, bodyEnd));
-  }
+  for(let c=0;c<numCols;c++) analysis.push(analyzeColumn(rows, c, bodyStart, bodyEnd));
 
-  // Заголовки в нижнем регистре
   const h = header.map(x=>String(x||'').trim().toLowerCase());
 
-  // Правила по ключевым словам
   const keywordMap = {
     num:    /(^№|^no\.?$|номер|позици|п\/п|поз\.?$)/i,
     name:   /(наимен|назван|технич.*характер|описание|товар|услуг|работа|материал)/i,
@@ -388,49 +595,35 @@ function guessColumnTypes(rows, headerIdx){
     sum:    /(сумма|^итого$|^всего$|стоимост[ьи]$|total)/i
   };
 
-  const scores = {}; // {field: [ {col, score} ]}
+  const scores = {};
   for(const field in keywordMap) scores[field]=[];
 
   for(let c=0;c<numCols;c++){
     const a = analysis[c];
     const hc = h[c]||'';
-
-    // Keyword-скоринг
     for(const field in keywordMap){
       if(keywordMap[field].test(hc)){
-        scores[field].push({col:c, score: 100 + a.textRatio*5, source:'header'});
+        scores[field].push({col:c, score: 100 + a.textRatio*5});
       }
     }
-
-    // Контентный скоринг
-    // Наименование: длинный текст
     if(a.textRatio>0.5 && a.avgLen>15 && a.nonEmpty>2){
-      scores.name.push({col:c, score: 40 + Math.min(a.avgLen,80)/2, source:'content'});
+      scores.name.push({col:c, score: 40 + Math.min(a.avgLen,80)/2});
     }
-    // Единица измерения: короткий текст
     if(a.textRatio>0.6 && a.avgLen>0 && a.avgLen<6 && a.nonEmpty>3){
-      scores.unit.push({col:c, score: 30 + (5-a.avgLen)*3, source:'content'});
+      scores.unit.push({col:c, score: 30 + (5-a.avgLen)*3});
     }
-    // Примечание: текст, но не длинный и не короткий
     if(a.textRatio>0.5 && a.avgLen>=6 && a.avgLen<=60 && a.nonEmpty>0){
-      scores.note.push({col:c, score: 15, source:'content'});
+      scores.note.push({col:c, score: 15});
     }
-    // Числовые колонки
     if(a.numericRatio>0.7 && a.nonEmpty>1){
-      // Кол-во: числа небольшие
       const avg = a.sum/a.nonEmpty;
-      // Сумма: числа большие
-      if(avg>5000) scores.sum.push({col:c, score: 35, source:'content'});
-      // Цена: средние числа
-      if(avg>100 && avg<100000) scores.price.push({col:c, score: 30, source:'content'});
-      // Кол-во: маленькие числа или целые
-      if(avg<5000) scores.qty.push({col:c, score: 30, source:'content'});
-      // № / Позиция: короткие целые в начале
-      if(c===0 && avg<1000) scores.num.push({col:c, score: 25, source:'content'});
+      if(avg>5000) scores.sum.push({col:c, score: 35});
+      if(avg>100 && avg<100000) scores.price.push({col:c, score: 30});
+      if(avg<5000) scores.qty.push({col:c, score: 30});
+      if(c===0 && avg<1000) scores.num.push({col:c, score: 25});
     }
   }
 
-  // Выбираем лучшую колонку для каждого поля
   const result = {};
   const usedCols = new Set();
   const order = ['num','name','unit','qty','price','sum','req','code','vendor','mass','note'];
@@ -439,21 +632,13 @@ function guessColumnTypes(rows, headerIdx){
     const list = (scores[field]||[]).filter(x=>!usedCols.has(x.col));
     if(!list.length) continue;
     list.sort((a,b)=>b.score-a.score);
-    const best = list[0];
-    result[field] = best.col;
-    usedCols.add(best.col);
+    result[field] = list[0].col;
+    usedCols.add(list[0].col);
   }
-
-  // Проверка: если sum не найден, но есть qty+price — не критично, вычислим
   return result;
 }
 
-/* ---------- Определение разделов ---------- */
 function detectSections(rows, headerIdx, colMap){
-  // Раздел = строка, где:
-  // - заполнена только одна колонка (обычно первая)
-  // - или заполнена первая + мало других
-  // - и это не строка заголовков
   const nameCol = colMap.name;
   const qtyCol  = colMap.qty;
   const sumCol  = colMap.sum;
@@ -467,22 +652,16 @@ function detectSections(rows, headerIdx, colMap){
     const nameVal = nameCol!==undefined ? String(r[nameCol]||'').trim() : '';
     const firstVal= String(r[0]||'').trim();
 
-    // Полностью пустая строка
     const nonEmpty = r.filter(c=>!isEmpty(c)).length;
     if(nonEmpty===0) continue;
 
-    // Определяем: это строка-раздел или позиция?
-    // Если Наименование пустое, но есть текст в первой колонке — раздел
     if(!nameVal && firstVal && isTextCell(firstVal)){
       if(current.rows.length) sections.push(current);
       current = {title:firstVal.toUpperCase(), rows:[], total:0};
       continue;
     }
-
-    // Если наименования нет вообще и первая колонка пустая — пропускаем
     if(!nameVal && !firstVal) continue;
 
-    // Если название есть — это позиция
     if(nameVal){
       const qty   = qtyCol   !==undefined ? parseNum(r[qtyCol])   : null;
       const price = priceCol !==undefined ? parseNum(r[priceCol]) : null;
@@ -499,36 +678,23 @@ function detectSections(rows, headerIdx, colMap){
         sum,
         note: colMap.note!==undefined ? String(r[colMap.note]||'').trim() : ''
       });
-      continue;
     }
-
-    // Прочие строки (например, «Итого ...») — пропускаем, пересчитаем сами
   }
   if(current.rows.length) sections.push(current);
-
-  sections.forEach(s=>{
-    s.total = s.rows.reduce((a,r)=>a+(r.sum||0),0);
-  });
-
+  sections.forEach(s=>{ s.total = s.rows.reduce((a,r)=>a+(r.sum||0),0); });
   return sections;
 }
 
-/* ---------- Парсинг и построение ---------- */
 function parseAndBuild(){
   if(!RAW_ROWS) return;
-  if(HEADER_IDX<0){
-    setStatus('err','Не удалось найти строку заголовков');
-    return;
-  }
+  if(HEADER_IDX<0){ setStatus('err','Не найдена строка заголовков'); return; }
 
-  // Берём colMap из UI
   const colMap = {};
   document.querySelectorAll('.mapper select').forEach(sel=>{
     const field = sel.dataset.field;
     const val = sel.value;
     if(val!=='' && val!=='skip') colMap[field] = parseInt(val,10);
   });
-
   COL_MAP = colMap;
 
   const sections = detectSections(RAW_ROWS, HEADER_IDX, colMap);
@@ -538,16 +704,14 @@ function parseAndBuild(){
   PARSED = {sections, grandTotal, colMap, headerIdx:HEADER_IDX};
 
   if(rowsCount===0){
-    setStatus('err','Не удалось распознать ни одной позиции. Проверьте сопоставление колонок.');
+    setStatus('err','Не удалось распознать позиции. Проверьте сопоставление колонок.');
     document.getElementById('btnBuild').disabled=true;
     return;
   }
-
   setStatus('ok',`Распознано: ${sections.length} раздел(ов), ${rowsCount} позиций, итого ${fmt(grandTotal)} ₽`);
   document.getElementById('btnBuild').disabled=false;
 }
 
-/* ---------- Построение UI сопоставления ---------- */
 function buildMapperUI(rows, headerIdx){
   const header = rows[headerIdx]||[];
   const numCols = header.length;
@@ -555,7 +719,6 @@ function buildMapperUI(rows, headerIdx){
 
   const mapper = document.getElementById('mapper');
   mapper.innerHTML='';
-
   const order = ['num','name','req','code','vendor','unit','qty','price','sum','mass','note'];
 
   order.forEach(field=>{
@@ -569,13 +732,11 @@ function buildMapperUI(rows, headerIdx){
     const sel = document.createElement('select');
     sel.dataset.field = field;
 
-    // Опция «пропустить»
     const optSkip = document.createElement('option');
     optSkip.value='skip';
     optSkip.textContent = FIELD_LABELS.skip;
     sel.appendChild(optSkip);
 
-    // Все колонки
     for(let c=0;c<numCols;c++){
       const opt = document.createElement('option');
       opt.value = c;
@@ -587,21 +748,19 @@ function buildMapperUI(rows, headerIdx){
         }
         return '';
       })();
-      opt.textContent = `${String.fromCharCode(65+c)} — ${hName || '(пусто)'}${sample?' · '+sample:''}`;
+      opt.textContent = `${String.fromCharCode(65+c)} — ${hName||'(пусто)'}${sample?' · '+sample:''}`;
       sel.appendChild(opt);
     }
 
-    // Устанавливаем автоопределение
     if(detected[field]!==undefined){
       sel.value = detected[field];
       sel.classList.add('found');
     } else {
-      sel.value = 'skip';
+      sel.value='skip';
       if(REQUIRED.includes(field)) sel.classList.add('missing');
     }
 
     sel.addEventListener('change',()=>{
-      // Обновляем класс
       sel.classList.remove('found','missing');
       if(sel.value!=='skip') sel.classList.add('found');
       else if(REQUIRED.includes(field)) sel.classList.add('missing');
@@ -616,7 +775,6 @@ function buildMapperUI(rows, headerIdx){
   document.getElementById('mapper').classList.add('show');
 }
 
-/* ---------- Обработка файла ---------- */
 function handleFile(file){
   setStatus('warn','Читаем файл…');
   const reader=new FileReader();
@@ -639,20 +797,18 @@ function processRows(rows){
   RAW_ROWS = rows;
   HEADER_IDX = findHeaderRow(rows);
   if(HEADER_IDX<0){
-    setStatus('err','Не найдена строка заголовков. Проверьте файл — есть ли шапка с названиями колонок.');
+    setStatus('err','Не найдена строка заголовков. Проверьте файл.');
     return;
   }
   buildMapperUI(rows, HEADER_IDX);
   parseAndBuild();
 }
 
-/* ---------- Статус ---------- */
 function setStatus(type,msg){
   const el=document.getElementById('status');
   el.className='status '+type; el.textContent=msg;
 }
 
-/* ---------- Мета ---------- */
 function getMeta(){
   const g=id=>document.getElementById(id).value.trim();
   return {
@@ -665,7 +821,6 @@ function getMeta(){
   };
 }
 
-/* ---------- Превью ---------- */
 function buildPreview(){
   if(!PARSED){ setStatus('err','Сначала загрузите расчёт'); return; }
   const m=getMeta();
@@ -787,7 +942,7 @@ function renderVariantTables(sections,m,total){
   return html;
 }
 
-/* ---------- PDF ---------- */
+/* ==================== PDF с сохранением в историю ==================== */
 function downloadPDF(){
   if(!PARSED){ setStatus('err','Сначала сформируйте превью'); return; }
   const loader=document.getElementById('pdf-loader');
@@ -804,17 +959,34 @@ function downloadPDF(){
     pagebreak:{mode:['css','avoid-all'],avoid:'tr,.corp-card,.corp-section-title'}
   };
 
-  html2pdf().set(opt).from(element).save()
-    .then(()=>{loader.style.display='none';setStatus('ok','PDF сохранён');})
-    .catch(err=>{
-      console.error(err);
-      loader.style.display='none';
-      setStatus('warn','Автосохранение не удалось, открываю печать');
-      setTimeout(()=>window.print(),300);
-    });
+  const worker = html2pdf().set(opt).from(element);
+
+  worker.outputPdf('blob').then(async blob=>{
+    // Сохраняем в историю
+    try{
+      await savePdfToHistory(blob, m, PARSED);
+      await renderHistory();
+    }catch(err){
+      console.error('Не удалось сохранить в историю:', err);
+    }
+    // Скачиваем
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 5000);
+
+    loader.style.display='none';
+    setStatus('ok','PDF сохранён в историю и скачан');
+  }).catch(err=>{
+    console.error(err);
+    loader.style.display='none';
+    setStatus('warn','Не удалось сформировать PDF, открываю печать');
+    setTimeout(()=>window.print(),300);
+  });
 }
 
-/* ---------- Пример ---------- */
+/* ==================== Пример и сброс ==================== */
 function useSample(){
   const sample=[
     ['№','Наименование','ГОСТ / ТУ','Кол-во','Ед.','Цена','Сумма','Примечание'],
@@ -845,7 +1017,7 @@ function resetAll(){
   setStatus('ok','Сброшено');
 }
 
-/* ---------- Слушатели ---------- */
+/* ==================== Слушатели ==================== */
 document.getElementById('dropzone').addEventListener('click',()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change',e=>{
   if(e.target.files[0]) handleFile(e.target.files[0]);
@@ -867,6 +1039,9 @@ document.getElementById('btnPrint').addEventListener('click',()=>window.print())
     if(PARSED && document.getElementById('pdf-content').style.display!=='none') buildPreview();
   });
 });
+
+/* ==================== Инициализация ==================== */
+renderHistory();
 </script>
 </body>
 </html>
