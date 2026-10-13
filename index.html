@@ -539,7 +539,7 @@ img.onerror=()=>res(null);img.src=url;
 }
 
 async function generatePDFBlob(parsed,meta){
-const{w:J}=window.jspdf;
+const J = window.jspdf.jsPDF;
 const font=await loadPdfFont();
 const split=parsed.sections.some(s=>s.rows.some(r=>r.split));
 const orientation=split?'landscape':'portrait';
@@ -551,7 +551,7 @@ const M=10,W=PW-M*2;
 const dtl=`${meta.date}${meta.time?' '+meta.time:''}`;
 const hh=38;
 doc.setFillColor(43,47,51);doc.rect(M,M,W,hh,'F');
-doc.setFillColor(255,193,7);doc.setGState(new doc.GState({opacity:0.15}));doc.circle(M+W-10,M+10,22,'F');doc.setGState(new doc.GState({opacity:1}));
+doc.setFillColor(230,170,20);doc.circle(M+W-10,M+10,18,'F');
 doc.setFont(ff,'bold');doc.setFontSize(18);doc.setTextColor(255,255,255);
 doc.text('ЛУЧ',M+6,M+12);
 const lw=doc.getTextWidth('ЛУЧ');
