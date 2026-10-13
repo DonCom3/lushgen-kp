@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЛучСтрой КП-Генератор v4.3</title>
+<title>ЛучСтрой КП-Генератор v4.4</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -108,8 +108,8 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .corp-section-title{font-size:18px;margin:28px 0 12px;color:var(--graphite);display:flex;align-items:center;gap:10px}
 .corp-section-title::before{content:'';width:6px;height:22px;background:var(--yellow);border-radius:2px;flex-shrink:0}
 .table-wrap{overflow-x:auto;background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:12px}
-table{width:100%;border-collapse:collapse;min-width:700px}
-th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top}
+table{width:100%;border-collapse:collapse;min-width:700px;table-layout:fixed}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;word-wrap:break-word;word-break:break-word;overflow-wrap:anywhere}
 th{background:#f9fafb;color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
 tr:last-child td{border-bottom:none}
 td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
@@ -129,8 +129,6 @@ tr.grand-total td span{color:var(--yellow)}
 #pdf-loader .box{background:var(--graphite-dark);padding:32px 48px;border-radius:16px;border:2px solid var(--yellow);text-align:center}
 #pdf-loader .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--yellow);border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-
-/* ===== РЕДАКТИРУЕМОЕ ПРЕВЬЮ ===== */
 [contenteditable="true"]{outline:none;border-radius:4px;transition:background .15s,box-shadow .15s;cursor:text}
 [contenteditable="true"]:hover{background:#fff8e1}
 [contenteditable="true"]:focus{background:#fff3cd;box-shadow:0 0 0 2px var(--yellow)}
@@ -159,7 +157,7 @@ tr:hover .row-del{color:#9ca3af}
   #pdf-content{box-shadow:none;border-radius:0}
   .corp-header,.corp-footer{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .table-wrap{overflow:visible;box-shadow:none}
-  table{min-width:0;font-size:10px}
+  table{min-width:0;font-size:10px;table-layout:auto}
   th,td{padding:5px 7px}
   [contenteditable]{background:none!important;box-shadow:none!important}
   tr{page-break-inside:avoid}
@@ -173,7 +171,7 @@ tr:hover .row-del{color:#9ca3af}
 
 <div class="app">
   <aside class="sidebar">
-    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v4.3</h2>
+    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v4.4</h2>
     <div class="tagline">Загрузите Excel → отредактируйте → скачайте PDF</div>
 
     <div class="panel">
@@ -282,8 +280,9 @@ tr:hover .row-del{color:#9ca3af}
 
 <script>
 /* ============================================================
-   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v4.3
-   + Редактирование превью (добавление/удаление строк)
+   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v4.4
+   + Пропуск "Итого" строк, распознавание разделов по ключевым словам
+   + Улучшенные разрывы страниц в PDF
    ============================================================ */
 
 /* ==================== IndexedDB ==================== */
@@ -487,6 +486,11 @@ const FIELD_LABELS={
 };
 const REQUIRED=['name','qty','price','sum'];
 
+/* Раздел: короткое название-категория в колонке Наименование */
+const SECTION_RE = /^(материал|оборудован|работ|услуг|конструкц|монтаж|доставк|раздел|прочее|сооружен|система|комплекс|часть)/i;
+/* Итого: строку полностью пропускаем */
+const SKIP_RE = /^(итого|всего|итог|total|подытог|подытого)/i;
+
 function fmt(n){if(n===null||n===undefined||isNaN(n))return'—';return Number(n).toLocaleString('ru-RU',{maximumFractionDigits:2});}
 function parseNum(v){
   if(v===null||v===undefined||v==='')return null;
@@ -618,32 +622,55 @@ function guessColumnTypes(rows,header,headerEnd){
   }
   return result;
 }
+
+/* ---------- РАЗДЕЛЫ (v4.4 — с пропуском "Итого" и распознаванием по ключевым словам) ---------- */
 function detectSections(rows,headerEnd,colMap){
   const nameCol=colMap.name,qtyCol=colMap.qty,sumCol=colMap.sum,priceCol=colMap.price;
   const sections=[];
   let current={title:'ПОЗИЦИИ',rows:[],total:0};
+
   for(let i=headerEnd+1;i<rows.length;i++){
     const r=rows[i]||[];
     const nameVal=nameCol!==undefined?String(r[nameCol]||'').trim():'';
     const firstVal=String(r[0]||'').trim();
     const nonEmpty=r.filter(c=>!isEmpty(c)).length;
     if(nonEmpty===0)continue;
-    if(!nameVal&&firstVal&&isTextCell(firstVal)){
+
+    /* --- 1) Пропуск "Итого" / "Всего" --- */
+    if(nameVal && SKIP_RE.test(nameVal)) continue;
+    if(!nameVal && firstVal && SKIP_RE.test(firstVal)) continue;
+
+    /* --- 2) Раздел по первой колонке (name пустое) --- */
+    if(!nameVal && firstVal && isTextCell(firstVal)){
       if(current.rows.length)sections.push(current);
       current={title:firstVal.toUpperCase(),rows:[],total:0};
       continue;
     }
-    if(!nameVal&&!firstVal)continue;
+    if(!nameVal && !firstVal)continue;
+
+    /* --- 3) Раздел по колонке "Наименование" --- */
     if(nameVal){
-      const qty=qtyCol!==undefined?parseNum(r[qtyCol]):null;
-      const price=priceCol!==undefined?parseNum(r[priceCol]):null;
-      let sum=sumCol!==undefined?parseNum(r[sumCol]):null;
-      if(sum===null&&qty!==null&&price!==null)sum=qty*price;
+      const qty   = qtyCol   !==undefined ? parseNum(r[qtyCol])   : null;
+      const price = priceCol !==undefined ? parseNum(r[priceCol]) : null;
+      let   sum   = sumCol   !==undefined ? parseNum(r[sumCol])   : null;
+      if(sum===null && qty!==null && price!==null) sum=qty*price;
+
+      // Раздел: ключевое слово + нет чисел
+      const isSectionRow = SECTION_RE.test(nameVal)
+        && qty===null && price===null && sum===null
+        && nameVal.length<40 && !/\d/.test(nameVal);
+      if(isSectionRow){
+        if(current.rows.length)sections.push(current);
+        current={title:nameVal.toUpperCase(),rows:[],total:0};
+        continue;
+      }
+
       current.rows.push({
         num:colMap.num!==undefined?String(r[colMap.num]||'').trim():String(current.rows.length+1),
         name:nameVal,
         req:colMap.req!==undefined?String(r[colMap.req]||'').trim():'',
-        qty,unit:colMap.unit!==undefined?String(r[colMap.unit]||'').trim():'',
+        qty,
+        unit:colMap.unit!==undefined?String(r[colMap.unit]||'').trim():'',
         price,sum,
         note:colMap.note!==undefined?String(r[colMap.note]||'').trim():''
       });
@@ -653,6 +680,7 @@ function detectSections(rows,headerEnd,colMap){
   sections.forEach(s=>{s.total=s.rows.reduce((a,r)=>a+(r.sum||0),0);});
   return sections;
 }
+
 function parseAndBuild(){
   if(!RAW_ROWS)return;
   if(HEADER_IDX<0){setStatus('err','Не найдена строка заголовков');return;}
@@ -755,7 +783,7 @@ function getMeta(){
   };
 }
 
-/* ==================== Пересчёт итогов ==================== */
+/* ==================== Пересчёт ==================== */
 function recalcTotals(){
   if(!PARSED)return;
   PARSED.sections.forEach(s=>{
@@ -781,56 +809,38 @@ function deleteRow(secIdx,rowIdx){
   if(!PARSED)return;
   if(!confirm('Удалить эту строку?'))return;
   PARSED.sections[secIdx].rows.splice(rowIdx,1);
-  recalcTotals();
-  buildPreview();
-  setStatus('ok','Строка удалена');
+  recalcTotals();buildPreview();setStatus('ok','Строка удалена');
 }
 function addRow(secIdx){
   if(!PARSED)return;
   const rows=PARSED.sections[secIdx].rows;
-  rows.push({
-    num:String(rows.length+1),name:'Новая позиция',req:'',
-    qty:1,unit:'шт.',price:0,sum:0,note:''
-  });
-  recalcTotals();
-  buildPreview();
-  setStatus('ok','Строка добавлена');
+  rows.push({num:String(rows.length+1),name:'Новая позиция',req:'',qty:1,unit:'шт.',price:0,sum:0,note:''});
+  recalcTotals();buildPreview();setStatus('ok','Строка добавлена');
 }
 function deleteSection(secIdx){
   if(!PARSED)return;
   if(!confirm('Удалить весь раздел со всеми строками?'))return;
   PARSED.sections.splice(secIdx,1);
-  if(!PARSED.sections.length){
-    PARSED.sections.push({title:'НОВЫЙ РАЗДЕЛ',rows:[],total:0});
-  }
-  recalcTotals();
-  buildPreview();
-  setStatus('ok','Раздел удалён');
+  if(!PARSED.sections.length)PARSED.sections.push({title:'НОВЫЙ РАЗДЕЛ',rows:[],total:0});
+  recalcTotals();buildPreview();setStatus('ok','Раздел удалён');
 }
 function addSection(){
   if(!PARSED)return;
   PARSED.sections.push({title:'НОВЫЙ РАЗДЕЛ',rows:[],total:0});
-  recalcTotals();
-  buildPreview();
-  setStatus('ok','Раздел добавлен');
+  recalcTotals();buildPreview();setStatus('ok','Раздел добавлен');
 }
 
-/* ==================== Редактирование ячеек ==================== */
+/* ==================== Редактирование ==================== */
 function onCellEdit(cell){
   if(!PARSED)return;
   const secIdx=parseInt(cell.dataset.sec,10);
   const rowIdx=cell.dataset.row!==undefined?parseInt(cell.dataset.row,10):-1;
   const field=cell.dataset.field;
   const text=cell.textContent.trim();
-
-  if(field==='secTitle'){
-    PARSED.sections[secIdx].title=text||'РАЗДЕЛ';
-    return;
-  }
+  if(field==='secTitle'){PARSED.sections[secIdx].title=text||'РАЗДЕЛ';return;}
   if(rowIdx<0)return;
   const row=PARSED.sections[secIdx].rows[rowIdx];
   if(!row)return;
-
   if(field==='qty'||field==='price'||field==='sum'){
     const num=parseNum(text);
     row[field]=num;
@@ -845,20 +855,15 @@ function onCellEdit(cell){
   }else{
     row[field]=text;
   }
-  recalcTotals();
-  updateTotalsInDOM();
+  recalcTotals();updateTotalsInDOM();
 }
 function setupEditablePreview(){
   const el=document.getElementById('pdf-content');
   el.querySelectorAll('[contenteditable="true"]').forEach(cell=>{
     cell.addEventListener('keydown',e=>{
-      if(e.key==='Enter'&&!e.shiftKey){
-        e.preventDefault();
-        cell.blur();
-      }
+      if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();cell.blur();}
     });
     cell.addEventListener('blur',()=>onCellEdit(cell));
-    // Простая защита от вставки HTML
     cell.addEventListener('paste',e=>{
       e.preventDefault();
       const text=(e.clipboardData||window.clipboardData).getData('text/plain');
@@ -886,7 +891,7 @@ function buildPreview(){
   document.getElementById('btnPrint2').disabled=false;
   setupEditablePreview();
   if(pw)pw.scrollTop=scrollTop;
-  setStatus('ok','Превью сформировано. Кликните на ячейку для редактирования.');
+  setStatus('ok','Превью сформировано');
 }
 
 function renderKP(data,m){
@@ -928,7 +933,6 @@ function renderKP(data,m){
 function renderVariantTables(sections,m,total){
   let html='';
   sections.forEach((s,secIdx)=>{
-    // Заголовок раздела с возможностью редактирования
     html+=`<h2 class="corp-section-title">
       <span class="sec-title-text" contenteditable="true" data-sec="${secIdx}" data-field="secTitle">${escapeHtml(s.title)}</span>
       <button class="sec-del no-print" onclick="deleteSection(${secIdx})" title="Удалить раздел">🗑</button>
@@ -938,13 +942,13 @@ function renderVariantTables(sections,m,total){
       <thead><tr>
         <th class="col-actions no-print"></th>
         <th style="width:36px">№</th>
-        <th>Наименование</th>
-        <th>Требования</th>
-        <th class="num" style="width:70px">Кол-во</th>
-        <th class="center" style="width:50px">Ед.</th>
-        <th class="num" style="width:90px">Цена, ₽</th>
-        <th class="num" style="width:100px">Сумма, ₽</th>
-        <th>Примечание</th>
+        <th style="width:30%">Наименование</th>
+        <th style="width:15%">Требования</th>
+        <th class="num" style="width:60px">Кол-во</th>
+        <th class="center" style="width:44px">Ед.</th>
+        <th class="num" style="width:80px">Цена, ₽</th>
+        <th class="num" style="width:90px">Сумма, ₽</th>
+        <th style="width:12%">Примечание</th>
       </tr></thead><tbody>`;
 
     s.rows.forEach((r,rowIdx)=>{
@@ -996,22 +1000,38 @@ function downloadPDF(){
   const filename=`КП_ЛучСтройГрупп_${(m.kpNumber||'').replace(/[^\w\-]/g,'')}.pdf`;
   const source=document.getElementById('pdf-content');
 
-  // Клонируем и очищаем от служебных элементов
+  /* Клонируем и чистим служебные элементы */
   const clone=source.cloneNode(true);
   clone.querySelectorAll('.no-print').forEach(el=>el.remove());
   clone.querySelectorAll('.col-actions').forEach(el=>el.remove());
   clone.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   clone.querySelectorAll('.table-actions').forEach(el=>el.remove());
-  clone.classList.add('printing');
+  // Убираем первую колонку из всех строк (чтобы не было пустого места)
+  clone.querySelectorAll('tr').forEach(tr=>{
+    const firstTd=tr.querySelector('td.col-actions, th.col-actions');
+    if(firstTd)firstTd.remove();
+  });
   clone.style.display='block';
   clone.style.background='#fff';
+  clone.style.padding='0';
+  clone.style.margin='0';
+
+  // Вставляем во временный контейнер с шириной A4
+  const holder=document.createElement('div');
+  holder.style.cssText='position:fixed;left:-99999px;top:0;width:190mm;background:#fff;';
+  holder.appendChild(clone);
+  document.body.appendChild(holder);
 
   const opt={
     margin:[8,6,8,6],filename,
-    image:{type:'jpeg',quality:0.98},
-    html2canvas:{scale:2,useCORS:true,backgroundColor:'#ffffff',scrollY:0},
+    image:{type:'jpeg',quality:0.95},
+    html2canvas:{
+      scale:2,useCORS:true,backgroundColor:'#ffffff',
+      windowWidth:holder.scrollWidth,width:holder.scrollWidth,
+      scrollY:0,scrollX:0
+    },
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
-    pagebreak:{mode:['css','avoid-all'],avoid:'tr,.corp-card,.corp-section-title'}
+    pagebreak:{mode:['css','legacy'],avoid:'tr'}
   };
 
   html2pdf().set(opt).from(clone).outputPdf('blob').then(async blob=>{
@@ -1021,10 +1041,13 @@ function downloadPDF(){
     a.href=url;a.download=filename;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),5000);
+    document.body.removeChild(holder);
     loader.style.display='none';
     setStatus('ok','PDF сохранён в историю и скачан');
   }).catch(err=>{
-    console.error(err);loader.style.display='none';
+    console.error(err);
+    if(document.body.contains(holder))document.body.removeChild(holder);
+    loader.style.display='none';
     setStatus('warn','Не удалось сформировать PDF, открываю печать');
     setTimeout(()=>window.print(),300);
   });
@@ -1037,9 +1060,11 @@ function useSample(){
     ['Водопровод'],
     ['','Кран шаровой Ø15','11Б27п1','17','шт.','1 500 ₽','25 500 ₽',''],
     ['','Трубопровод оцинкованный','ГОСТ 3262-75','120','м.','1 500 ₽','180 000 ₽',''],
-    ['Канализация'],
+    ['Материалы'],
     ['','Трубы ПП Ø110','ГОСТ 32414-2013','115','м.','2 000 ₽','230 000 ₽',''],
-    ['','Отвод ПП 45°','ГОСТ 32414-2013','58','шт.','1 000 ₽','58 000 ₽','']
+    ['','Отвод ПП 45°','ГОСТ 32414-2013','58','шт.','1 000 ₽','58 000 ₽',''],
+    ['','Итого материалы','','','','','493 500 ₽',''],
+    ['Итого по разделу','','','','','','673 500 ₽','']
   ];
   processRows(sample);
   setStatus('ok','Пример загружен');
@@ -1069,25 +1094,4 @@ document.getElementById('btnPdf').addEventListener('click',downloadPDF);
 document.getElementById('btnPrint').addEventListener('click',()=>window.print());
 ['kpNumber','kpDate','kpTime','client','object','subtitle','vat','validity','company','address','phone','email','site','director','manager'].forEach(id=>{
   document.getElementById(id).addEventListener('input',()=>{
-    if(PARSED&&document.getElementById('pdf-content').style.display!=='none'){
-      // Быстрое обновление шапки и подвала без полного рендера
-      const m=getMeta();
-      const dtLine=`${m.date}${m.time?' '+m.time:''}`;
-      document.getElementById('toolbarInfo').innerHTML=`КП <b>№ ${m.kpNumber}</b> от ${dtLine} · <b>${fmt(PARSED.grandTotal)} ₽</b> с НДС ${m.vat}%`;
-      // Полный рендер, чтобы обновить все поля
-      buildPreview();
-    }
-  });
-});
-document.getElementById('kpDate').addEventListener('change',async()=>{
-  const cur=document.getElementById('kpNumber').value;
-  if(!cur||/^\d{4}-\d{4}\/\d+$/.test(cur)){
-    document.getElementById('kpNumber').value=await generateKpNumber();
-  }
-});
-
-/* ==================== Инициализация ==================== */
-(async()=>{await initDefaults();await renderHistory();})();
-</script>
-</body>
-</html>
+    if(PARSED&&document.getElementById('pdf-content').style.display!=='none
