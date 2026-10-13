@@ -716,6 +716,9 @@ doc.text(`Исполнитель: ${meta.manager||''}`,M+W*0.5,y+25);
 doc.setFont(ff,'normal');doc.setFontSize(7);doc.setTextColor(150,150,150);
 doc.text(`КП сформировано ${dtl}. Срок действия — ${meta.validity} дней. Цены с НДС ${meta.vat}%.`,M+5,y+30);
 
+const filename=`КП_ЛучСтройГрупп_${(meta.kpNumber||'').replace(/[^\w\-]/g,'')}.pdf`;
+try{doc.save(filename);}catch(e){console.warn('save failed',e);}
+setTimeout(()=>{try{window.open(doc.output('bloburl'),'_blank');}catch(e){console.warn('open failed',e);}},300);
 return doc.output('blob');
 }
 
