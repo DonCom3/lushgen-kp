@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЛучСтрой КП-Генератор v4.4</title>
+<title>ЛучСтрой КП-Генератор v4.6</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -12,6 +12,7 @@
   --yellow:#ffc107; --yellow-dark:#e0a800;
   --bg:#eef0f3; --white:#fff; --text:#1f2328; --muted:#6b7280;
   --border:#e5e7eb; --ok:#16a34a; --warn:#f59e0b; --err:#dc2626;
+  --work:#2e7d32; --work-bg:#e8f5e9; --mat:#1565c0; --mat-bg:#e3f2fd;
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -53,12 +54,14 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .status.err{background:rgba(220,38,38,.15);color:#f87171;display:block}
 .mapper{display:none;margin-top:12px;font-size:12px}
 .mapper.show{display:block}
-.mapper .map-row{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;padding:5px 0;border-bottom:1px dashed #454b52}
+.mapper .map-row{display:grid;grid-template-columns:120px 1fr;gap:8px;align-items:center;padding:5px 0;border-bottom:1px dashed #454b52}
 .mapper .map-row:last-child{border:none}
 .mapper .map-row label{color:#cbd5e1;font-size:12px}
 .mapper .map-row select{width:100%;padding:6px 8px;border-radius:6px;border:1px solid #4b5158;background:#2b2f33;color:#fff;font-size:12px}
 .mapper .map-row select.found{border-color:#16a34a;background:#1e3a2a}
 .mapper .map-row select.missing{border-color:#dc2626;background:#3a1e1e}
+.mapper .map-row select.work{border-color:var(--work);background:#1e3a2a}
+.mapper .map-row select.mat{border-color:var(--mat);background:#1e2a3a}
 .mapper .hint{color:#8b9198;font-size:11px;margin-top:8px;line-height:1.4}
 .history-list{display:flex;flex-direction:column;gap:8px;max-height:340px;overflow-y:auto}
 .history-item{background:#2b2f33;border:1px solid #454b52;border-radius:10px;padding:10px 12px;font-size:12px}
@@ -96,27 +99,36 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .corp-header .client{margin-top:14px;font-size:14px;color:#e5e7eb;position:relative;z-index:1}
 .corp-header .client b{color:var(--yellow)}
 .corp-body{padding:28px 36px}
-.hero-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:28px}
+.hero-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:28px}
 .corp-card{background:#fff;border-radius:14px;padding:18px;border:1px solid var(--border);box-shadow:0 2px 12px rgba(0,0,0,.04)}
 .corp-card.dark{background:var(--graphite);color:#fff;border-color:var(--graphite)}
+.corp-card.work{background:var(--work-bg);border-color:#a5d6a7}
+.corp-card.mat{background:var(--mat-bg);border-color:#90caf9}
 .corp-card .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
 .corp-card.dark .label{color:#cbd5e1}
-.corp-card .price{font-size:26px;font-weight:800;color:var(--graphite);margin-top:4px}
+.corp-card.work .label{color:var(--work)}
+.corp-card.mat .label{color:var(--mat)}
+.corp-card .price{font-size:24px;font-weight:800;color:var(--graphite);margin-top:4px}
 .corp-card.dark .price{color:var(--yellow)}
+.corp-card.work .price{color:var(--work)}
+.corp-card.mat .price{color:var(--mat)}
 .corp-card .hint{font-size:12px;color:var(--muted);margin-top:4px}
 .corp-card.dark .hint{color:#9ca3af}
 .corp-section-title{font-size:18px;margin:28px 0 12px;color:var(--graphite);display:flex;align-items:center;gap:10px}
 .corp-section-title::before{content:'';width:6px;height:22px;background:var(--yellow);border-radius:2px;flex-shrink:0}
 .table-wrap{overflow-x:auto;background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:12px}
-table{width:100%;border-collapse:collapse;min-width:700px;table-layout:fixed}
-th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top;word-wrap:break-word;word-break:break-word;overflow-wrap:anywhere}
-th{background:#f9fafb;color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
+table{width:100%;border-collapse:collapse;min-width:760px;table-layout:fixed}
+table.table-split{min-width:1150px}
+th,td{padding:8px 10px;text-align:left;border-bottom:1px solid var(--border);font-size:12px;vertical-align:top;word-wrap:break-word;word-break:break-word;overflow-wrap:anywhere}
+th{background:#f9fafb;color:var(--muted);font-weight:600;text-transform:uppercase;font-size:10px;letter-spacing:.5px;line-height:1.3}
 tr:last-child td{border-bottom:none}
 td.num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 td.center{text-align:center}
-tr.total-row td{font-weight:800;background:#fff8e1;font-size:13px}
+tr.total-row td{font-weight:800;background:#fff8e1;font-size:12px}
 tr.grand-total td{font-weight:800;background:var(--graphite);color:#fff;font-size:14px}
 tr.grand-total td span{color:var(--yellow)}
+th.h-work,td.h-work{background:var(--work-bg);color:var(--work)}
+th.h-mat,td.h-mat{background:var(--mat-bg);color:var(--mat)}
 .corp-footer{background:var(--graphite-dark);color:#fff;padding:28px 36px;margin-top:8px}
 .corp-footer .grid{display:grid;grid-template-columns:1fr 1fr;gap:24px}
 .corp-footer h3{margin:0 0 8px;color:var(--yellow);font-size:15px}
@@ -132,10 +144,18 @@ tr.grand-total td span{color:var(--yellow)}
 [contenteditable="true"]{outline:none;border-radius:4px;transition:background .15s,box-shadow .15s;cursor:text}
 [contenteditable="true"]:hover{background:#fff8e1}
 [contenteditable="true"]:focus{background:#fff3cd;box-shadow:0 0 0 2px var(--yellow)}
-.col-actions{width:32px!important;min-width:32px;padding:2px!important;text-align:center;vertical-align:middle!important}
-.row-del{width:22px;height:22px;border:none;border-radius:50%;background:transparent;color:#d1d5db;font-size:18px;font-weight:700;line-height:1;cursor:pointer;padding:0;transition:.15s;font-family:inherit}
+.col-actions{width:56px!important;min-width:56px;padding:4px!important;text-align:center;vertical-align:middle!important;white-space:nowrap}
+.row-del{width:22px;height:22px;border:none;border-radius:50%;background:transparent;color:#d1d5db;font-size:18px;font-weight:700;line-height:1;cursor:pointer;padding:0;transition:.15s;font-family:inherit;vertical-align:middle;margin-left:2px}
 tr:hover .row-del{color:#9ca3af}
 .row-del:hover{background:#dc2626;color:#fff!important}
+.exclude-btn{width:24px;height:24px;border-radius:50%;border:none;background:var(--yellow);color:var(--graphite-dark);font-size:13px;font-weight:800;line-height:1;cursor:pointer;padding:0;font-family:inherit;transition:.15s;vertical-align:middle;display:inline-flex;align-items:center;justify-content:center}
+.exclude-btn:hover{transform:scale(1.15);box-shadow:0 2px 6px rgba(0,0,0,.15)}
+.exclude-btn.off{background:#d1d5db;color:#6b7280}
+.exclude-btn.off:hover{background:#9ca3af;color:#fff}
+tr.row-excluded{background:#f9fafb}
+tr.row-excluded td:not(.col-actions){opacity:.45}
+tr.row-excluded td.num{text-decoration:line-through;text-decoration-color:#ef4444;text-decoration-thickness:2px}
+.excluded-note{font-size:11px;color:#9ca3af;font-weight:400;margin-left:8px;white-space:nowrap}
 .sec-title-text{outline:none;padding:2px 8px;border-radius:6px;transition:background .15s,box-shadow .15s;cursor:text}
 .sec-title-text:hover{background:#fff8e1}
 .sec-title-text:focus{background:#fff3cd;box-shadow:0 0 0 2px var(--yellow)}
@@ -149,17 +169,19 @@ tr:hover .row-del{color:#9ca3af}
 @media (hover:none){.row-del,.sec-del{opacity:1!important;color:#9ca3af}}
 
 @media print{
-  @page{size:A4;margin:10mm}
+  @page{size:A4 landscape;margin:8mm}
   body{background:#fff}
   .sidebar,.preview-toolbar,#pdf-loader,.no-print,.col-actions,.edit-hint{display:none!important}
   .app{display:block;height:auto}
   .preview-wrap{padding:0;overflow:visible}
   #pdf-content{box-shadow:none;border-radius:0}
-  .corp-header,.corp-footer{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .corp-header,.corp-footer,.h-work,.h-mat{-webkit-print-color-adjust:exact;print-color-adjust:exact}
   .table-wrap{overflow:visible;box-shadow:none}
-  table{min-width:0;font-size:10px;table-layout:auto}
-  th,td{padding:5px 7px}
+  table{min-width:0;font-size:9px;table-layout:auto}
+  th,td{padding:4px 5px}
   [contenteditable]{background:none!important;box-shadow:none!important}
+  tr.row-excluded{background:#f3f4f6!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  tr.row-excluded td:not(.col-actions){opacity:.5!important}
   tr{page-break-inside:avoid}
   thead{display:table-header-group}
   .corp-section-title{page-break-after:avoid}
@@ -171,7 +193,7 @@ tr:hover .row-del{color:#9ca3af}
 
 <div class="app">
   <aside class="sidebar">
-    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v4.4</h2>
+    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v4.6</h2>
     <div class="tagline">Загрузите Excel → отредактируйте → скачайте PDF</div>
 
     <div class="panel">
@@ -192,7 +214,10 @@ tr:hover .row-del{color:#9ca3af}
     <div class="panel" id="mapperPanel" style="display:none">
       <h3>2. Сопоставление колонок</h3>
       <div class="mapper" id="mapper"></div>
-      <div class="hint">Сервис распознал колонки. Если что-то не так — поправьте через списки.</div>
+      <div class="hint">
+        Сервис автоматически распознаёт колонки.<br>
+        🟢 <b>Работы</b> и 🔵 <b>Материалы</b> распознаются отдельно, если они есть в файле.
+      </div>
     </div>
 
     <div class="panel">
@@ -263,7 +288,7 @@ tr:hover .row-del{color:#9ca3af}
     </div>
 
     <div id="editHint" class="edit-hint" style="display:none;margin-bottom:16px">
-      💡 <b>Кликните на любую ячейку</b> — отредактируйте значение. Наведите на строку и нажмите <b>×</b> чтобы удалить. Итоги пересчитываются автоматически.
+      💡 Кликните на ячейку — отредактировать. <b>✓</b> — учитывать строку, нажмите чтобы исключить. <b>×</b> — удалить строку.
     </div>
 
     <div id="emptyState" class="empty">
@@ -280,9 +305,8 @@ tr:hover .row-del{color:#9ca3af}
 
 <script>
 /* ============================================================
-   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v4.4
-   + Пропуск "Итого" строк, распознавание разделов по ключевым словам
-   + Улучшенные разрывы страниц в PDF
+   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v4.6
+   + Раздельные колонки Работы / Материалы (цена + сумма)
    ============================================================ */
 
 /* ==================== IndexedDB ==================== */
@@ -479,34 +503,63 @@ let COL_MAP={};
 let PARSED=null;
 
 const FIELD_LABELS={
-  num:'№ / Позиция',name:'Наименование',req:'Тип / Марка / ГОСТ',
-  code:'Код / Артикул',vendor:'Завод / Производитель',unit:'Ед. изм.',
-  qty:'Кол-во',price:'Цена',sum:'Сумма',note:'Примечание',
-  mass:'Масса',skip:'— пропустить —'
+  num:'№ / Позиция',
+  name:'Наименование',
+  req:'Тип / Марка / ГОСТ',
+  code:'Код / Артикул',
+  vendor:'Завод / Производитель',
+  unit:'Ед. изм.',
+  qty:'Кол-во',
+  work_price:'Цена работ',
+  work_sum:'Сумма работ',
+  material_price:'Цена материалов',
+  material_sum:'Сумма материалов',
+  price:'Цена (общая)',
+  sum:'Сумма (общая)',
+  note:'Примечание',
+  mass:'Масса',
+  skip:'— пропустить —'
 };
-const REQUIRED=['name','qty','price','sum'];
+const REQUIRED=['name','qty'];
 
-/* Раздел: короткое название-категория в колонке Наименование */
 const SECTION_RE = /^(материал|оборудован|работ|услуг|конструкц|монтаж|доставк|раздел|прочее|сооружен|система|комплекс|часть)/i;
-/* Итого: строку полностью пропускаем */
 const SKIP_RE = /^(итого|всего|итог|total|подытог|подытого)/i;
+
+/* ---------- Нормализация ячейки ---------- */
+function normalizeCell(v){
+  if(v===null||v===undefined) return null;
+  if(typeof v==='string'){
+    const t=v.trim();
+    if(t.startsWith('=')) return null; // формула без значения
+    if(t==='') return null;
+    return t;
+  }
+  return v;
+}
 
 function fmt(n){if(n===null||n===undefined||isNaN(n))return'—';return Number(n).toLocaleString('ru-RU',{maximumFractionDigits:2});}
 function parseNum(v){
-  if(v===null||v===undefined||v==='')return null;
-  if(typeof v==='number')return v;
-  let s=String(v).replace(/\u00a0/g,'').replace(/[₽руб]/gi,'').replace(/\s/g,'').replace(/,/g,'.').replace(/[^0-9.\-]/g,'');
+  const nv=normalizeCell(v);
+  if(nv===null)return null;
+  if(typeof nv==='number')return isFinite(nv)?nv:null;
+  let s=String(nv).replace(/\u00a0/g,'').replace(/[₽руб]/gi,'').replace(/\s/g,'').replace(/,/g,'.').replace(/[^0-9.\-]/g,'');
   const n=parseFloat(s);return isNaN(n)?null:n;
 }
-function isEmpty(v){return v===null||v===undefined||String(v).trim()==='';}
+function isEmpty(v){return normalizeCell(v)===null;}
 function isNumericCell(v){
-  if(typeof v==='number')return isFinite(v);
-  if(isEmpty(v))return false;
-  const s=String(v).replace(/\u00a0/g,'').replace(/[₽руб]/gi,'').replace(/\s/g,'').replace(/,/g,'.');
+  const nv=normalizeCell(v);
+  if(nv===null)return false;
+  if(typeof nv==='number')return isFinite(nv);
+  const s=String(nv).replace(/\u00a0/g,'').replace(/[₽руб]/gi,'').replace(/\s/g,'').replace(/,/g,'.');
   return /^-?\d+(\.\d+)?$/.test(s);
 }
-function isTextCell(v){if(isEmpty(v))return false;if(typeof v==='number')return false;return /[а-яёa-z]/i.test(String(v));}
-function cellLen(v){return isEmpty(v)?0:String(v).trim().length;}
+function isTextCell(v){
+  const nv=normalizeCell(v);
+  if(nv===null)return false;
+  if(typeof nv==='number')return false;
+  return /[а-яёa-z]/i.test(String(nv));
+}
+function cellLen(v){const nv=normalizeCell(v);return nv===null?0:String(nv).trim().length;}
 
 function findHeaderRow(rows){
   let best=-1,bestScore=0;
@@ -516,7 +569,8 @@ function findHeaderRow(rows){
     if(!r.length)continue;
     let textCount=0,nonEmpty=0,unique=new Set();
     r.forEach(c=>{
-      if(!isEmpty(c)){nonEmpty++;unique.add(String(c).trim().toLowerCase());if(isTextCell(c))textCount++;}
+      const nv=normalizeCell(c);
+      if(nv!==null){nonEmpty++;unique.add(String(nv).trim().toLowerCase());if(isTextCell(nv))textCount++;}
     });
     const score=nonEmpty>=3&&textCount/nonEmpty>=0.4?textCount+unique.size*0.5:0;
     if(score>bestScore){bestScore=score;best=i;}
@@ -532,7 +586,8 @@ function detectHeaderRange(rows){
     if(!r.length)break;
     let textCount=0,nonEmpty=0,numCount=0,totalLen=0;
     r.forEach(c=>{
-      if(!isEmpty(c)){nonEmpty++;totalLen+=String(c).length;if(isNumericCell(c))numCount++;else if(isTextCell(c))textCount++;}
+      const nv=normalizeCell(c);
+      if(nv!==null){nonEmpty++;totalLen+=String(nv).length;if(isNumericCell(nv))numCount++;else if(isTextCell(nv))textCount++;}
     });
     if(nonEmpty===0)break;
     const avgLen=totalLen/nonEmpty;
@@ -547,9 +602,9 @@ function buildMergedHeader(rows,start,end){
   for(let c=0;c<maxCols;c++){
     const parts=[];
     for(let r=start;r<=end;r++){
-      const v=(rows[r]||[])[c];
-      if(!isEmpty(v)){
-        const s=String(v).trim();
+      const nv=normalizeCell((rows[r]||[])[c]);
+      if(nv!==null){
+        const s=String(nv).trim();
         const low=s.toLowerCase();
         if(!parts.some(p=>p.toLowerCase()===low))parts.push(s);
       }
@@ -562,10 +617,11 @@ function analyzeColumn(rows,colIdx,fromRow,toRow){
   let nums=0,texts=0,empties=0,total=0,sumVal=0,avgLen=0;
   for(let i=fromRow;i<toRow;i++){
     const v=(rows[i]||[])[colIdx];
+    const nv=normalizeCell(v);
     total++;
-    if(isEmpty(v))empties++;
-    else if(isNumericCell(v)){nums++;sumVal+=parseNum(v)||0;}
-    else if(isTextCell(v)){texts++;avgLen+=cellLen(v);}
+    if(nv===null)empties++;
+    else if(isNumericCell(nv)){nums++;sumVal+=parseNum(nv)||0;}
+    else if(isTextCell(nv)){texts++;avgLen+=cellLen(nv);}
   }
   const nonEmpty=total-empties;
   return{
@@ -576,30 +632,42 @@ function analyzeColumn(rows,colIdx,fromRow,toRow){
     sum:sumVal
   };
 }
+
+/* ---------- Распознавание колонок (v4.6) ---------- */
 function guessColumnTypes(rows,header,headerEnd){
   const bodyStart=headerEnd+1,bodyEnd=rows.length,numCols=header.length;
   const analysis=[];
   for(let c=0;c<numCols;c++)analysis.push(analyzeColumn(rows,c,bodyStart,bodyEnd));
   const h=header.map(x=>String(x||'').trim().toLowerCase());
+
   const keywordMap={
-    num:/(^№|^no\.?$|номер|позици|п\/п|поз\.?$)/i,
-    name:/(наимен|назван|технич.*характер|описание|товар|услуг|работ|материал)/i,
-    req:/(требован|гост|марка|тип|обознач|специф|опросн)/i,
-    code:/(^код|артикул)/i,
-    vendor:/(завод|изготов|производ|бренд)/i,
-    unit:/(ед\.?\s*изм|ед\.$|единиц|^ед$|^мера)/i,
-    qty:/(кол-?во|колич|объ[её]м|количество)/i,
-    mass:/(масса|вес)/i,
-    note:/(примеч|коммент|note)/i,
-    price:/(цена|расценка|price|за\s+ед|стоимост[ьи]\s+за)/i,
-    sum:/(сумма|итого|всего|total)/i
+    num:    /(^№|^no\.?$|^номер|^позици|п\/п|^поз\.?$)/i,
+    name:   /(наимен|назван|технич.*характер|описание|товар|услуг|работ|материал)/i,
+    req:    /(требован|гост|марка|тип|обознач|специф|опросн)/i,
+    code:   /(^код|артикул)/i,
+    vendor: /(завод|изготов|производ|бренд)/i,
+    unit:   /(ед\.?\s*изм|^ед\.?$|единиц|^мера)/i,
+    qty:    /(кол-?во|колич|объ[её]м|количество)/i,
+    mass:   /(масса|вес)/i,
+    note:   /(примеч|коммент|note)/i,
+    /* Сначала — специфичные паттерны */
+    work_price:     /(работ\w*\s+ед|работ\w*\s+цен|цена\s+работ|стоимост[ьи]\s+работ|работ\w*\s+за\s+ед)/i,
+    work_sum:       /(работ\w*\s+сумм|сумм\w*\s+работ|стоимост[ьи]\s+работ|работ\w*\s+всего)/i,
+    material_price: /(оборуд\w*\s+ед|оборуд\w*\s+цен|материал\w*\s+ед|материал\w*\s+цен|цена\s+(оборуд|материал)|стоимост[ьи]\s+(оборуд|материал))/i,
+    material_sum:   /(оборуд\w*\s+сумм|материал\w*\s+сумм|сумма\s+(оборуд|материал)|стоимост[ьи]\s+(оборуд|материал)|(оборуд|материал)\w*\s+всего)/i,
+    price:  /(цена|расценка|price)/i,
+    sum:    /(сумма|итого|всего|total)/i
   };
+
   const scores={};
   for(const field in keywordMap)scores[field]=[];
+
   for(let c=0;c<numCols;c++){
     const a=analysis[c],hc=h[c]||'';
     for(const field in keywordMap){
-      if(keywordMap[field].test(hc))scores[field].push({col:c,score:100+a.textRatio*5});
+      if(keywordMap[field].test(hc)){
+        scores[field].push({col:c,score:100+a.textRatio*5});
+      }
     }
     if(a.textRatio>0.5&&a.avgLen>15&&a.nonEmpty>2)scores.name.push({col:c,score:40+Math.min(a.avgLen,80)/2});
     if(a.textRatio>0.6&&a.avgLen>0&&a.avgLen<6&&a.nonEmpty>3)scores.unit.push({col:c,score:30+(5-a.avgLen)*3});
@@ -612,8 +680,12 @@ function guessColumnTypes(rows,header,headerEnd){
       if(c===0&&avg<1000)scores.num.push({col:c,score:25});
     }
   }
+
   const result={},usedCols=new Set();
-  const order=['num','name','unit','qty','price','sum','req','code','vendor','mass','note'];
+  /* Сначала — специфичные поля, чтобы не перепутать с общими price/sum */
+  const order=['num','name','unit','qty',
+               'work_price','work_sum','material_price','material_sum',
+               'price','sum','req','code','vendor','mass','note'];
   for(const field of order){
     const list=(scores[field]||[]).filter(x=>!usedCols.has(x.col));
     if(!list.length)continue;
@@ -623,24 +695,28 @@ function guessColumnTypes(rows,header,headerEnd){
   return result;
 }
 
-/* ---------- РАЗДЕЛЫ (v4.4 — с пропуском "Итого" и распознаванием по ключевым словам) ---------- */
+/* ---------- Определение разделов (v4.6) ---------- */
 function detectSections(rows,headerEnd,colMap){
-  const nameCol=colMap.name,qtyCol=colMap.qty,sumCol=colMap.sum,priceCol=colMap.price;
+  const nameCol=colMap.name;
+  const qtyCol=colMap.qty;
+  const wpCol=colMap.work_price, wsCol=colMap.work_sum;
+  const mpCol=colMap.material_price, msCol=colMap.material_sum;
+  const priceCol=colMap.price, sumCol=colMap.sum;
+
   const sections=[];
   let current={title:'ПОЗИЦИИ',rows:[],total:0};
 
   for(let i=headerEnd+1;i<rows.length;i++){
     const r=rows[i]||[];
-    const nameVal=nameCol!==undefined?String(r[nameCol]||'').trim():'';
-    const firstVal=String(r[0]||'').trim();
-    const nonEmpty=r.filter(c=>!isEmpty(c)).length;
+    const nameVal=nameCol!==undefined?String(normalizeCell(r[nameCol])||'').trim():'';
+    const firstVal=String(normalizeCell(r[0])||'').trim();
+    const nonEmpty=r.filter(c=>normalizeCell(c)!==null).length;
     if(nonEmpty===0)continue;
 
-    /* --- 1) Пропуск "Итого" / "Всего" --- */
     if(nameVal && SKIP_RE.test(nameVal)) continue;
     if(!nameVal && firstVal && SKIP_RE.test(firstVal)) continue;
 
-    /* --- 2) Раздел по первой колонке (name пустое) --- */
+    /* Раздел в первой колонке */
     if(!nameVal && firstVal && isTextCell(firstVal)){
       if(current.rows.length)sections.push(current);
       current={title:firstVal.toUpperCase(),rows:[],total:0};
@@ -648,16 +724,26 @@ function detectSections(rows,headerEnd,colMap){
     }
     if(!nameVal && !firstVal)continue;
 
-    /* --- 3) Раздел по колонке "Наименование" --- */
     if(nameVal){
-      const qty   = qtyCol   !==undefined ? parseNum(r[qtyCol])   : null;
-      const price = priceCol !==undefined ? parseNum(r[priceCol]) : null;
-      let   sum   = sumCol   !==undefined ? parseNum(r[sumCol])   : null;
-      if(sum===null && qty!==null && price!==null) sum=qty*price;
+      const qty   = qtyCol!==undefined ? parseNum(r[qtyCol]) : null;
+      const wPrice= wpCol !==undefined ? parseNum(r[wpCol])  : null;
+      const mPrice= mpCol !==undefined ? parseNum(r[mpCol])  : null;
+      let   wSum  = wsCol !==undefined ? parseNum(r[wsCol])  : null;
+      let   mSum  = msCol !==undefined ? parseNum(r[msCol])  : null;
 
-      // Раздел: ключевое слово + нет чисел
+      /* Fallback: если сумм нет, но есть qty+price — вычисляем */
+      if(wSum===null && qty!==null && wPrice!==null) wSum = qty * wPrice;
+      if(mSum===null && qty!==null && mPrice!==null) mSum = qty * mPrice;
+
+      /* Общие price/sum для случая без разделения */
+      const price = priceCol!==undefined ? parseNum(r[priceCol]) : null;
+      let   sum   = sumCol  !==undefined ? parseNum(r[sumCol])   : null;
+
+      /* Раздел: ключевое слово + нет чисел */
+      const noNumbers = qty===null && wPrice===null && mPrice===null
+                     && wSum===null && mSum===null && price===null && sum===null;
       const isSectionRow = SECTION_RE.test(nameVal)
-        && qty===null && price===null && sum===null
+        && noNumbers
         && nameVal.length<40 && !/\d/.test(nameVal);
       if(isSectionRow){
         if(current.rows.length)sections.push(current);
@@ -665,19 +751,33 @@ function detectSections(rows,headerEnd,colMap){
         continue;
       }
 
+      /* Собираем строку */
+      const hasSplit = (wPrice!==null || mPrice!==null || wSum!==null || mSum!==null);
+      let totalSum;
+      if(hasSplit){
+        totalSum = (wSum||0) + (mSum||0);
+      }else{
+        if(sum===null && qty!==null && price!==null) sum=qty*price;
+        totalSum = sum || 0;
+      }
+
       current.rows.push({
-        num:colMap.num!==undefined?String(r[colMap.num]||'').trim():String(current.rows.length+1),
-        name:nameVal,
-        req:colMap.req!==undefined?String(r[colMap.req]||'').trim():'',
-        qty,
-        unit:colMap.unit!==undefined?String(r[colMap.unit]||'').trim():'',
-        price,sum,
-        note:colMap.note!==undefined?String(r[colMap.note]||'').trim():''
+        num: colMap.num!==undefined ? String(normalizeCell(r[colMap.num])||'').trim() : String(current.rows.length+1),
+        name: nameVal,
+        req:  colMap.req!==undefined ? String(normalizeCell(r[colMap.req])||'').trim() : '',
+        qty, unit: colMap.unit!==undefined ? String(normalizeCell(r[colMap.unit])||'').trim() : '',
+        work_price: wPrice, work_sum: wSum,
+        material_price: mPrice, material_sum: mSum,
+        price, sum,
+        split: hasSplit,
+        totalSum,
+        note: colMap.note!==undefined ? String(normalizeCell(r[colMap.note])||'').trim() : '',
+        excluded: false
       });
     }
   }
   if(current.rows.length)sections.push(current);
-  sections.forEach(s=>{s.total=s.rows.reduce((a,r)=>a+(r.sum||0),0);});
+  sections.forEach(s=>{s.total=s.rows.filter(r=>!r.excluded).reduce((a,r)=>a+r.totalSum,0);});
   return sections;
 }
 
@@ -702,12 +802,15 @@ function parseAndBuild(){
   setStatus('ok',`Распознано: ${sections.length} раздел(ов), ${rowsCount} позиций, итого ${fmt(grandTotal)} ₽`);
   document.getElementById('btnBuild').disabled=false;
 }
+
 function buildMapperUI(rows,header,headerEnd){
   const numCols=header.length;
   const detected=guessColumnTypes(rows,header,headerEnd);
   const mapper=document.getElementById('mapper');
   mapper.innerHTML='';
-  const order=['num','name','req','code','vendor','unit','qty','price','sum','mass','note'];
+  const order=['num','name','req','code','vendor','unit','qty',
+               'work_price','work_sum','material_price','material_sum',
+               'price','sum','mass','note'];
   order.forEach(field=>{
     const row=document.createElement('div');
     row.className='map-row';
@@ -725,19 +828,30 @@ function buildMapperUI(rows,header,headerEnd){
       const hName=String(header[c]||'').trim();
       const sample=(()=>{
         for(let i=headerEnd+1;i<Math.min(headerEnd+8,rows.length);i++){
-          const v=(rows[i]||[])[c];
-          if(!isEmpty(v))return String(v).slice(0,30);
+          const v=normalizeCell((rows[i]||[])[c]);
+          if(v!==null)return String(v).slice(0,30);
         }
         return '';
       })();
       opt.textContent=`${String.fromCharCode(65+c)} — ${hName||'(пусто)'}${sample?' · '+sample:''}`;
       sel.appendChild(opt);
     }
-    if(detected[field]!==undefined){sel.value=detected[field];sel.classList.add('found');}
-    else{sel.value='skip';if(REQUIRED.includes(field))sel.classList.add('missing');}
+    if(detected[field]!==undefined){
+      sel.value=detected[field];
+      if(field.startsWith('work'))sel.classList.add('work');
+      else if(field.startsWith('material'))sel.classList.add('mat');
+      else sel.classList.add('found');
+    }else{
+      sel.value='skip';
+      if(REQUIRED.includes(field))sel.classList.add('missing');
+    }
     sel.addEventListener('change',()=>{
-      sel.classList.remove('found','missing');
-      if(sel.value!=='skip')sel.classList.add('found');
+      sel.classList.remove('found','missing','work','mat');
+      if(sel.value!=='skip'){
+        if(field.startsWith('work'))sel.classList.add('work');
+        else if(field.startsWith('material'))sel.classList.add('mat');
+        else sel.classList.add('found');
+      }
       else if(REQUIRED.includes(field))sel.classList.add('missing');
       parseAndBuild();
     });
@@ -746,15 +860,16 @@ function buildMapperUI(rows,header,headerEnd){
   document.getElementById('mapperPanel').style.display='block';
   document.getElementById('mapper').classList.add('show');
 }
+
 function handleFile(file){
   setStatus('warn','Читаем файл…');
   const reader=new FileReader();
   reader.onload=e=>{
     try{
       const data=new Uint8Array(e.target.result);
-      const wb=XLSX.read(data,{type:'array'});
+      const wb=XLSX.read(data,{type:'array',cellFormula:false});
       const ws=wb.Sheets[wb.SheetNames[0]];
-      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
       processRows(rows);
     }catch(err){console.error(err);setStatus('err','Ошибка чтения: '+err.message);}
   };
@@ -787,7 +902,7 @@ function getMeta(){
 function recalcTotals(){
   if(!PARSED)return;
   PARSED.sections.forEach(s=>{
-    s.total=s.rows.reduce((a,r)=>a+(r.sum||0),0);
+    s.total=s.rows.filter(r=>!r.excluded).reduce((a,r)=>a+(r.totalSum||0),0);
   });
   PARSED.grandTotal=PARSED.sections.reduce((a,s)=>a+s.total,0);
 }
@@ -795,13 +910,26 @@ function updateTotalsInDOM(){
   if(!PARSED)return;
   PARSED.sections.forEach((s,secIdx)=>{
     const el=document.querySelector(`[data-sec-total="${secIdx}"]`);
-    if(el)el.textContent=fmt(s.total);
+    if(el)el.textContent=fmt(s.total)+' ₽';
+    updateSectionExcludedNote(secIdx);
   });
   const gt=document.querySelector('[data-grand-total] span');
   if(gt)gt.textContent=fmt(PARSED.grandTotal)+' ₽';
+  const hero=document.querySelector('[data-hero-total]');
+  if(hero)hero.textContent=fmt(PARSED.grandTotal)+' ₽';
   const m=getMeta();
   const dtLine=`${m.date}${m.time?' '+m.time:''}`;
   document.getElementById('toolbarInfo').innerHTML=`КП <b>№ ${m.kpNumber}</b> от ${dtLine} · <b>${fmt(PARSED.grandTotal)} ₽</b> с НДС ${m.vat}%`;
+}
+function updateSectionExcludedNote(secIdx){
+  if(!PARSED)return;
+  const s=PARSED.sections[secIdx];
+  const excl=s.rows.filter(r=>r.excluded);
+  const note=document.querySelector(`[data-sec-note="${secIdx}"]`);
+  if(!note)return;
+  if(excl.length===0){note.textContent='';return;}
+  const exclSum=excl.reduce((a,r)=>a+(r.totalSum||0),0);
+  note.textContent=`(${excl.length} поз. на ${fmt(exclSum)} ₽ не учтено)`;
 }
 
 /* ==================== Структурные операции ==================== */
@@ -814,7 +942,19 @@ function deleteRow(secIdx,rowIdx){
 function addRow(secIdx){
   if(!PARSED)return;
   const rows=PARSED.sections[secIdx].rows;
-  rows.push({num:String(rows.length+1),name:'Новая позиция',req:'',qty:1,unit:'шт.',price:0,sum:0,note:''});
+  /* Определяем: у нас split-режим или обычный */
+  const hasSplit=PARSED.sections.some(s=>s.rows.some(r=>r.split));
+  const newRow={num:String(rows.length+1),name:'Новая позиция',req:'',
+    qty:1,unit:'шт.',note:'',excluded:false};
+  if(hasSplit){
+    newRow.work_price=0;newRow.work_sum=0;
+    newRow.material_price=0;newRow.material_sum=0;
+    newRow.split=true;
+  }else{
+    newRow.price=0;newRow.sum=0;
+  }
+  newRow.totalSum=0;
+  rows.push(newRow);
   recalcTotals();buildPreview();setStatus('ok','Строка добавлена');
 }
 function deleteSection(secIdx){
@@ -830,6 +970,27 @@ function addSection(){
   recalcTotals();buildPreview();setStatus('ok','Раздел добавлен');
 }
 
+/* ==================== Исключение ==================== */
+function toggleRowExclusion(secIdx,rowIdx){
+  if(!PARSED)return;
+  const row=PARSED.sections[secIdx].rows[rowIdx];
+  if(!row)return;
+  row.excluded=!row.excluded;
+  const tr=document.querySelector(`tr[data-tr="${secIdx}-${rowIdx}"]`);
+  if(tr){
+    tr.classList.toggle('row-excluded',row.excluded);
+    const btn=tr.querySelector('.exclude-btn');
+    if(btn){
+      btn.classList.toggle('off',row.excluded);
+      btn.textContent=row.excluded?'—':'✓';
+      btn.title=row.excluded?'Вернуть в расчёт':'Не учитывать в итогах';
+    }
+  }
+  recalcTotals();
+  updateTotalsInDOM();
+  setStatus('ok',row.excluded?'Строка исключена из расчёта':'Строка возвращена в расчёт');
+}
+
 /* ==================== Редактирование ==================== */
 function onCellEdit(cell){
   if(!PARSED)return;
@@ -841,16 +1002,41 @@ function onCellEdit(cell){
   if(rowIdx<0)return;
   const row=PARSED.sections[secIdx].rows[rowIdx];
   if(!row)return;
-  if(field==='qty'||field==='price'||field==='sum'){
+
+  const numFields=['qty','work_price','work_sum','material_price','material_sum','price','sum'];
+  if(numFields.includes(field)){
     const num=parseNum(text);
     row[field]=num;
+    if(field==='qty'||field==='work_price'){
+      if(row.qty!==null&&row.work_price!==null){
+        row.work_sum=row.qty*row.work_price;
+        const c=cell.closest('tr').querySelector('[data-field="work_sum"]');
+        if(c)c.textContent=fmt(row.work_sum);
+      }
+    }
+    if(field==='qty'||field==='material_price'){
+      if(row.qty!==null&&row.material_price!==null){
+        row.material_sum=row.qty*row.material_price;
+        const c=cell.closest('tr').querySelector('[data-field="material_sum"]');
+        if(c)c.textContent=fmt(row.material_sum);
+      }
+    }
     if(field==='qty'||field==='price'){
       if(row.qty!==null&&row.price!==null){
         row.sum=row.qty*row.price;
-        const sumCell=cell.closest('tr').querySelector('[data-field="sum"]');
-        if(sumCell)sumCell.textContent=fmt(row.sum);
+        const c=cell.closest('tr').querySelector('[data-field="sum"]');
+        if(c)c.textContent=fmt(row.sum);
       }
     }
+    /* Пересчёт totalSum */
+    if(row.split){
+      row.totalSum=(row.work_sum||0)+(row.material_sum||0);
+    }else{
+      row.totalSum=row.sum||0;
+    }
+    /* Обновляем ячейку Итого в этой строке */
+    const totalCell=cell.closest('tr').querySelector('[data-field="totalSum"]');
+    if(totalCell)totalCell.textContent=fmt(row.totalSum);
     cell.textContent=(num!==null)?fmt(num):'';
   }else{
     row[field]=text;
@@ -894,18 +1080,57 @@ function buildPreview(){
   setStatus('ok','Превью сформировано');
 }
 
+/* Есть ли где-то в данных раздельные работы/материалы */
+function hasSplitData(){
+  if(!PARSED)return false;
+  return PARSED.sections.some(s=>s.rows.some(r=>r.split));
+}
+
+function calcSums(){
+  let workTotal=0, matTotal=0;
+  if(!PARSED)return{workTotal,matTotal};
+  PARSED.sections.forEach(s=>{
+    s.rows.forEach(r=>{
+      if(r.excluded)return;
+      if(r.split){
+        workTotal += r.work_sum||0;
+        matTotal  += r.material_sum||0;
+      }else{
+        workTotal += r.sum||0;
+      }
+    });
+  });
+  return{workTotal,matTotal};
+}
+
 function renderKP(data,m){
   const{sections,grandTotal}=data;
   const rowsCount=sections.reduce((a,s)=>a+s.rows.length,0);
-  const heroHTML=`
-    <div class="hero-cards">
-      <div class="corp-card"><div class="label">Общая стоимость</div><div class="price">${fmt(grandTotal)} ₽</div><div class="hint">с НДС ${m.vat}%</div></div>
+  const split=hasSplitData();
+  const{workTotal,matTotal}=calcSums();
+
+  let heroCards;
+  if(split){
+    heroCards=`
+      <div class="corp-card"><div class="label">Общая стоимость</div><div class="price" data-hero-total>${fmt(grandTotal)} ₽</div><div class="hint">с НДС ${m.vat}%</div></div>
+      <div class="corp-card work"><div class="label">Работы</div><div class="price">${fmt(workTotal)} ₽</div><div class="hint">монтаж и ПНР</div></div>
+      <div class="corp-card mat"><div class="label">Материалы и оборудование</div><div class="price">${fmt(matTotal)} ₽</div><div class="hint">поставка</div></div>
+      <div class="corp-card"><div class="label">Позиций</div><div class="price">${rowsCount}</div><div class="hint">в ${sections.length} разделах</div></div>
+      <div class="corp-card dark"><div class="label">Срок действия КП</div><div class="price">${m.validity} дней</div><div class="hint">со дня фактического получения</div></div>
+    `;
+  }else{
+    heroCards=`
+      <div class="corp-card"><div class="label">Общая стоимость</div><div class="price" data-hero-total>${fmt(grandTotal)} ₽</div><div class="hint">с НДС ${m.vat}%</div></div>
       <div class="corp-card dark"><div class="label">Срок действия КП</div><div class="price">${m.validity} дней</div><div class="hint">со дня фактического получения</div></div>
       <div class="corp-card"><div class="label">Позиций</div><div class="price">${rowsCount}</div><div class="hint">в ${sections.length} разделах</div></div>
-    </div>`;
+    `;
+  }
+  const heroHTML=`<div class="hero-cards">${heroCards}</div>`;
+
   const tablesHTML=renderVariantTables(sections,m,grandTotal);
   const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(m.site)}`;
   const dateTimeLine=`${m.date}${m.time?' '+m.time:''}`;
+
   return`
   <div class="corp-header">
     <div class="top"><div class="corp-logo">ЛУЧ<span>СТРОЙ</span> ГРУПП</div><div class="corp-badge">КП № ${escapeHtml(m.kpNumber)} от ${dateTimeLine}</div></div>
@@ -931,63 +1156,144 @@ function renderKP(data,m){
 }
 
 function renderVariantTables(sections,m,total){
+  const split=hasSplitData();
   let html='';
+
   sections.forEach((s,secIdx)=>{
+    /* Работы/материалы по разделу */
+    const secWork=s.rows.filter(r=>!r.excluded).reduce((a,r)=>a+(r.work_sum||0),0);
+    const secMat =s.rows.filter(r=>!r.excluded).reduce((a,r)=>a+(r.material_sum||0),0);
+
     html+=`<h2 class="corp-section-title">
       <span class="sec-title-text" contenteditable="true" data-sec="${secIdx}" data-field="secTitle">${escapeHtml(s.title)}</span>
       <button class="sec-del no-print" onclick="deleteSection(${secIdx})" title="Удалить раздел">🗑</button>
     </h2>`;
 
-    html+=`<div class="table-wrap"><table>
-      <thead><tr>
-        <th class="col-actions no-print"></th>
-        <th style="width:36px">№</th>
-        <th style="width:30%">Наименование</th>
-        <th style="width:15%">Требования</th>
-        <th class="num" style="width:60px">Кол-во</th>
-        <th class="center" style="width:44px">Ед.</th>
-        <th class="num" style="width:80px">Цена, ₽</th>
-        <th class="num" style="width:90px">Сумма, ₽</th>
-        <th style="width:12%">Примечание</th>
-      </tr></thead><tbody>`;
+    if(split){
+      html+=`<div class="table-wrap"><table class="table-split">
+        <thead>
+          <tr>
+            <th class="col-actions no-print" rowspan="2"></th>
+            <th rowspan="2" style="width:32px">№</th>
+            <th rowspan="2" style="width:24%">Наименование</th>
+            <th rowspan="2" style="width:10%">Требования</th>
+            <th class="num" rowspan="2" style="width:52px">Кол-во</th>
+            <th class="center" rowspan="2" style="width:38px">Ед.</th>
+            <th colspan="2" class="h-work" style="text-align:center">Работы</th>
+            <th colspan="2" class="h-mat" style="text-align:center">Материалы</th>
+            <th class="num" rowspan="2" style="width:88px">Итого, ₽</th>
+            <th rowspan="2" style="width:9%">Прим.</th>
+          </tr>
+          <tr>
+            <th class="num h-work" style="width:68px">Цена, ₽</th>
+            <th class="num h-work" style="width:80px">Сумма, ₽</th>
+            <th class="num h-mat" style="width:68px">Цена, ₽</th>
+            <th class="num h-mat" style="width:80px">Сумма, ₽</th>
+          </tr>
+        </thead><tbody>`;
 
-    s.rows.forEach((r,rowIdx)=>{
-      html+=`<tr>
-        <td class="col-actions no-print">
-          <button class="row-del" onclick="deleteRow(${secIdx},${rowIdx})" title="Удалить строку">×</button>
-        </td>
-        <td class="center" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="num">${escapeHtml(r.num||rowIdx+1)}</td>
-        <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="name">${escapeHtml(r.name||'')}</td>
-        <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="req">${escapeHtml(r.req||'')}</td>
-        <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="qty">${r.qty!==null&&r.qty!==undefined?fmt(r.qty):''}</td>
-        <td class="center" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="unit">${escapeHtml(r.unit||'')}</td>
-        <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="price">${r.price!==null&&r.price!==undefined?fmt(r.price):''}</td>
-        <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="sum">${r.sum!==null&&r.sum!==undefined?fmt(r.sum):''}</td>
-        <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="note">${escapeHtml(r.note||'')}</td>
-      </tr>`;
-    });
+      s.rows.forEach((r,rowIdx)=>{
+        const ex=r.excluded?' row-excluded':'';
+        html+=`<tr class="${ex.trim()}" data-tr="${secIdx}-${rowIdx}">
+          <td class="col-actions no-print">
+            <button class="exclude-btn${r.excluded?' off':''}" onclick="toggleRowExclusion(${secIdx},${rowIdx})" title="${r.excluded?'Вернуть в расчёт':'Не учитывать'}">${r.excluded?'—':'✓'}</button>
+            <button class="row-del" onclick="deleteRow(${secIdx},${rowIdx})" title="Удалить">×</button>
+          </td>
+          <td class="center" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="num">${escapeHtml(r.num||rowIdx+1)}</td>
+          <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="name">${escapeHtml(r.name||'')}</td>
+          <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="req">${escapeHtml(r.req||'')}</td>
+          <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="qty">${r.qty!==null&&r.qty!==undefined?fmt(r.qty):''}</td>
+          <td class="center" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="unit">${escapeHtml(r.unit||'')}</td>
+          <td class="num h-work" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="work_price">${r.work_price!==null&&r.work_price!==undefined?fmt(r.work_price):''}</td>
+          <td class="num h-work" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="work_sum">${r.work_sum!==null&&r.work_sum!==undefined?fmt(r.work_sum):''}</td>
+          <td class="num h-mat" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="material_price">${r.material_price!==null&&r.material_price!==undefined?fmt(r.material_price):''}</td>
+          <td class="num h-mat" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="material_sum">${r.material_sum!==null&&r.material_sum!==undefined?fmt(r.material_sum):''}</td>
+          <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="totalSum">${fmt(r.totalSum)}</td>
+          <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="note">${escapeHtml(r.note||'')}</td>
+        </tr>`;
+      });
 
-    html+=`<tr class="total-row">
-      <td class="col-actions no-print"></td>
-      <td colspan="6" style="text-align:right">Итого по разделу</td>
-      <td class="num" data-sec-total="${secIdx}">${fmt(s.total)}</td>
-      <td></td>
-    </tr></tbody></table></div>`;
+      html+=`<tr class="total-row">
+        <td class="col-actions no-print"></td>
+        <td colspan="6" style="text-align:right">Итого по разделу <span class="excluded-note" data-sec-note="${secIdx}"></span></td>
+        <td class="num h-work">${secWork?fmt(secWork)+' ₽':'—'}</td>
+        <td class="num h-work">${secWork?fmt(secWork)+' ₽':'—'}</td>
+        <td class="num h-mat">${secMat?fmt(secMat)+' ₽':'—'}</td>
+        <td class="num h-mat">${secMat?fmt(secMat)+' ₽':'—'}</td>
+        <td class="num" data-sec-total="${secIdx}">${fmt(s.total)} ₽</td>
+        <td></td>
+      </tr></tbody></table></div>`;
+    }else{
+      /* Обычный layout */
+      html+=`<div class="table-wrap"><table>
+        <thead><tr>
+          <th class="col-actions no-print"></th>
+          <th style="width:36px">№</th>
+          <th style="width:30%">Наименование</th>
+          <th style="width:14%">Требования</th>
+          <th class="num" style="width:60px">Кол-во</th>
+          <th class="center" style="width:44px">Ед.</th>
+          <th class="num" style="width:90px">Цена, ₽</th>
+          <th class="num" style="width:100px">Сумма, ₽</th>
+          <th style="width:11%">Примечание</th>
+        </tr></thead><tbody>`;
+      s.rows.forEach((r,rowIdx)=>{
+        const ex=r.excluded?' row-excluded':'';
+        html+=`<tr class="${ex.trim()}" data-tr="${secIdx}-${rowIdx}">
+          <td class="col-actions no-print">
+            <button class="exclude-btn${r.excluded?' off':''}" onclick="toggleRowExclusion(${secIdx},${rowIdx})" title="${r.excluded?'Вернуть в расчёт':'Не учитывать'}">${r.excluded?'—':'✓'}</button>
+            <button class="row-del" onclick="deleteRow(${secIdx},${rowIdx})" title="Удалить">×</button>
+          </td>
+          <td class="center" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="num">${escapeHtml(r.num||rowIdx+1)}</td>
+          <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="name">${escapeHtml(r.name||'')}</td>
+          <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="req">${escapeHtml(r.req||'')}</td>
+          <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="qty">${r.qty!==null&&r.qty!==undefined?fmt(r.qty):''}</td>
+          <td class="center" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="unit">${escapeHtml(r.unit||'')}</td>
+          <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="price">${r.price!==null&&r.price!==undefined?fmt(r.price):''}</td>
+          <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="sum">${r.sum!==null&&r.sum!==undefined?fmt(r.sum):''}</td>
+          <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="note">${escapeHtml(r.note||'')}</td>
+        </tr>`;
+      });
+      html+=`<tr class="total-row">
+        <td class="col-actions no-print"></td>
+        <td colspan="6" style="text-align:right">Итого по разделу <span class="excluded-note" data-sec-note="${secIdx}"></span></td>
+        <td class="num" data-sec-total="${secIdx}">${fmt(s.total)} ₽</td>
+        <td></td>
+      </tr></tbody></table></div>`;
+    }
 
     html+=`<div class="table-actions no-print">
       <button class="add-row-btn" onclick="addRow(${secIdx})">+ Добавить строку</button>
     </div>`;
   });
 
-  html+=`<div class="table-wrap"><table><tbody><tr class="grand-total">
-    <td style="text-align:right">ИТОГО с НДС ${m.vat}%</td>
-    <td class="num" style="width:180px" data-grand-total><span>${fmt(total)} ₽</span></td>
-    <td style="width:40%"></td></tr></tbody></table></div>`;
+  /* Итоговая строка */
+  if(split){
+    const{workTotal,matTotal}=calcSums();
+    html+=`<div class="table-wrap"><table class="table-split"><tbody>
+      <tr class="grand-total">
+        <td colspan="6" style="text-align:right">ИТОГО с НДС ${m.vat}%</td>
+        <td class="num h-work">${fmt(workTotal)} ₽</td>
+        <td class="num h-work"></td>
+        <td class="num h-mat">${fmt(matTotal)} ₽</td>
+        <td class="num h-mat"></td>
+        <td class="num" data-grand-total><span>${fmt(total)} ₽</span></td>
+        <td></td>
+      </tr>
+    </tbody></table></div>`;
+  }else{
+    html+=`<div class="table-wrap"><table><tbody>
+      <tr class="grand-total">
+        <td style="text-align:right">ИТОГО с НДС ${m.vat}%</td>
+        <td class="num" style="width:180px" data-grand-total><span>${fmt(total)} ₽</span></td>
+        <td style="width:40%"></td>
+      </tr>
+    </tbody></table></div>`;
+  }
 
   html+=`<div class="table-actions no-print">
     <button class="add-section-btn" onclick="addSection()">+ Добавить раздел</button>
   </div>`;
-
   return html;
 }
 
@@ -1000,13 +1306,11 @@ function downloadPDF(){
   const filename=`КП_ЛучСтройГрупп_${(m.kpNumber||'').replace(/[^\w\-]/g,'')}.pdf`;
   const source=document.getElementById('pdf-content');
 
-  /* Клонируем и чистим служебные элементы */
   const clone=source.cloneNode(true);
   clone.querySelectorAll('.no-print').forEach(el=>el.remove());
   clone.querySelectorAll('.col-actions').forEach(el=>el.remove());
   clone.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
   clone.querySelectorAll('.table-actions').forEach(el=>el.remove());
-  // Убираем первую колонку из всех строк (чтобы не было пустого места)
   clone.querySelectorAll('tr').forEach(tr=>{
     const firstTd=tr.querySelector('td.col-actions, th.col-actions');
     if(firstTd)firstTd.remove();
@@ -1016,9 +1320,13 @@ function downloadPDF(){
   clone.style.padding='0';
   clone.style.margin='0';
 
-  // Вставляем во временный контейнер с шириной A4
+  /* Landscape A4 для широкой таблицы */
+  const isSplit=hasSplitData();
+  const orientation=isSplit?'landscape':'portrait';
+
   const holder=document.createElement('div');
-  holder.style.cssText='position:fixed;left:-99999px;top:0;width:190mm;background:#fff;';
+  const w=isSplit?'265mm':'190mm';
+  holder.style.cssText=`position:fixed;left:-99999px;top:0;width:${w};background:#fff;`;
   holder.appendChild(clone);
   document.body.appendChild(holder);
 
@@ -1030,7 +1338,7 @@ function downloadPDF(){
       windowWidth:holder.scrollWidth,width:holder.scrollWidth,
       scrollY:0,scrollX:0
     },
-    jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
+    jsPDF:{unit:'mm',format:'a4',orientation:orientation},
     pagebreak:{mode:['css','legacy'],avoid:'tr'}
   };
 
@@ -1041,7 +1349,7 @@ function downloadPDF(){
     a.href=url;a.download=filename;
     document.body.appendChild(a);a.click();document.body.removeChild(a);
     setTimeout(()=>URL.revokeObjectURL(url),5000);
-    document.body.removeChild(holder);
+    if(document.body.contains(holder))document.body.removeChild(holder);
     loader.style.display='none';
     setStatus('ok','PDF сохранён в историю и скачан');
   }).catch(err=>{
@@ -1056,15 +1364,15 @@ function downloadPDF(){
 /* ==================== Пример / сброс ==================== */
 function useSample(){
   const sample=[
-    ['№','Наименование','ГОСТ / ТУ','Кол-во','Ед.','Цена','Сумма','Примечание'],
-    ['Водопровод'],
-    ['','Кран шаровой Ø15','11Б27п1','17','шт.','1 500 ₽','25 500 ₽',''],
-    ['','Трубопровод оцинкованный','ГОСТ 3262-75','120','м.','1 500 ₽','180 000 ₽',''],
-    ['Материалы'],
-    ['','Трубы ПП Ø110','ГОСТ 32414-2013','115','м.','2 000 ₽','230 000 ₽',''],
-    ['','Отвод ПП 45°','ГОСТ 32414-2013','58','шт.','1 000 ₽','58 000 ₽',''],
-    ['','Итого материалы','','','','','493 500 ₽',''],
-    ['Итого по разделу','','','','','','673 500 ₽','']
+    ['','Наименование','Ед.','Кол-во','Работы ед.','Работы сумма','Оборуд. ед.','Оборуд. сумма'],
+    ['','Оборудование'],
+    ['','Шкаф для пожарного крана','шт.',24,8000,192000,12000,288000],
+    ['','Клапан пожарный Ду50','шт.',48,1500,72000,4000,192000],
+    ['','Огнетушитель ОП-5','шт.',24,300,7200,1200,28800],
+    ['','Материалы'],
+    ['','Труба SDR 7.4 D32','м.',1200,800,960000,350,420000],
+    ['','Труба PP-R FR D63','м.',800,1300,1040000,970,776000],
+    ['','Муфта ПП D125','шт.',67,1300,87100,1500,100500]
   ];
   processRows(sample);
   setStatus('ok','Пример загружен');
@@ -1094,4 +1402,23 @@ document.getElementById('btnPdf').addEventListener('click',downloadPDF);
 document.getElementById('btnPrint').addEventListener('click',()=>window.print());
 ['kpNumber','kpDate','kpTime','client','object','subtitle','vat','validity','company','address','phone','email','site','director','manager'].forEach(id=>{
   document.getElementById(id).addEventListener('input',()=>{
-    if(PARSED&&document.getElementById('pdf-content').style.display!=='none
+    if(PARSED&&document.getElementById('pdf-content').style.display!=='none'){
+      const m=getMeta();
+      const dtLine=`${m.date}${m.time?' '+m.time:''}`;
+      document.getElementById('toolbarInfo').innerHTML=`КП <b>№ ${m.kpNumber}</b> от ${dtLine} · <b>${fmt(PARSED.grandTotal)} ₽</b> с НДС ${m.vat}%`;
+      buildPreview();
+    }
+  });
+});
+document.getElementById('kpDate').addEventListener('change',async()=>{
+  const cur=document.getElementById('kpNumber').value;
+  if(!cur||/^\d{4}-\d{4}\/\d+$/.test(cur)){
+    document.getElementById('kpNumber').value=await generateKpNumber();
+  }
+});
+
+/* ==================== Инициализация ==================== */
+(async()=>{await initDefaults();await renderHistory();})();
+</script>
+</body>
+</html>
