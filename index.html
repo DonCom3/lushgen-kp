@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ЛучСтрой КП-Генератор v4.2</title>
+<title>ЛучСтрой КП-Генератор v4.3</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <style>
@@ -106,9 +106,9 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 .corp-card .hint{font-size:12px;color:var(--muted);margin-top:4px}
 .corp-card.dark .hint{color:#9ca3af}
 .corp-section-title{font-size:18px;margin:28px 0 12px;color:var(--graphite);display:flex;align-items:center;gap:10px}
-.corp-section-title::before{content:'';width:6px;height:22px;background:var(--yellow);border-radius:2px}
-.table-wrap{overflow-x:auto;background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:20px}
-table{width:100%;border-collapse:collapse;min-width:640px}
+.corp-section-title::before{content:'';width:6px;height:22px;background:var(--yellow);border-radius:2px;flex-shrink:0}
+.table-wrap{overflow-x:auto;background:#fff;border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.04);margin-bottom:12px}
+table{width:100%;border-collapse:collapse;min-width:700px}
 th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--border);font-size:13px;vertical-align:top}
 th{background:#f9fafb;color:var(--muted);font-weight:600;text-transform:uppercase;font-size:11px;letter-spacing:.5px}
 tr:last-child td{border-bottom:none}
@@ -129,10 +129,31 @@ tr.grand-total td span{color:var(--yellow)}
 #pdf-loader .box{background:var(--graphite-dark);padding:32px 48px;border-radius:16px;border:2px solid var(--yellow);text-align:center}
 #pdf-loader .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.2);border-top-color:var(--yellow);border-radius:50%;margin:0 auto 16px;animation:spin 1s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ===== РЕДАКТИРУЕМОЕ ПРЕВЬЮ ===== */
+[contenteditable="true"]{outline:none;border-radius:4px;transition:background .15s,box-shadow .15s;cursor:text}
+[contenteditable="true"]:hover{background:#fff8e1}
+[contenteditable="true"]:focus{background:#fff3cd;box-shadow:0 0 0 2px var(--yellow)}
+.col-actions{width:32px!important;min-width:32px;padding:2px!important;text-align:center;vertical-align:middle!important}
+.row-del{width:22px;height:22px;border:none;border-radius:50%;background:transparent;color:#d1d5db;font-size:18px;font-weight:700;line-height:1;cursor:pointer;padding:0;transition:.15s;font-family:inherit}
+tr:hover .row-del{color:#9ca3af}
+.row-del:hover{background:#dc2626;color:#fff!important}
+.sec-title-text{outline:none;padding:2px 8px;border-radius:6px;transition:background .15s,box-shadow .15s;cursor:text}
+.sec-title-text:hover{background:#fff8e1}
+.sec-title-text:focus{background:#fff3cd;box-shadow:0 0 0 2px var(--yellow)}
+.sec-del{margin-left:auto;border:none;background:transparent;color:#d1d5db;font-size:16px;cursor:pointer;padding:4px 10px;border-radius:6px;transition:.15s;opacity:0;font-family:inherit}
+.corp-section-title:hover .sec-del{opacity:1}
+.sec-del:hover{background:#dc2626;color:#fff}
+.table-actions{display:flex;gap:10px;justify-content:center;margin-bottom:24px;flex-wrap:wrap}
+.add-row-btn,.add-section-btn{padding:8px 16px;border:1px dashed #9ca3af;border-radius:8px;background:#fff;color:var(--muted);font-size:12px;font-weight:600;cursor:pointer;transition:.15s;font-family:inherit}
+.add-row-btn:hover,.add-section-btn:hover{border-color:var(--yellow);color:var(--graphite);background:#fff8e1;border-style:solid}
+.edit-hint{background:rgba(255,193,7,.15);color:#8a6d00;font-size:11px;padding:6px 10px;border-radius:6px;border-left:3px solid var(--yellow)}
+@media (hover:none){.row-del,.sec-del{opacity:1!important;color:#9ca3af}}
+
 @media print{
   @page{size:A4;margin:10mm}
   body{background:#fff}
-  .sidebar,.preview-toolbar,#pdf-loader{display:none!important}
+  .sidebar,.preview-toolbar,#pdf-loader,.no-print,.col-actions,.edit-hint{display:none!important}
   .app{display:block;height:auto}
   .preview-wrap{padding:0;overflow:visible}
   #pdf-content{box-shadow:none;border-radius:0}
@@ -140,9 +161,11 @@ tr.grand-total td span{color:var(--yellow)}
   .table-wrap{overflow:visible;box-shadow:none}
   table{min-width:0;font-size:10px}
   th,td{padding:5px 7px}
+  [contenteditable]{background:none!important;box-shadow:none!important}
   tr{page-break-inside:avoid}
   thead{display:table-header-group}
   .corp-section-title{page-break-after:avoid}
+  .sec-del{display:none!important}
 }
 </style>
 </head>
@@ -150,8 +173,8 @@ tr.grand-total td span{color:var(--yellow)}
 
 <div class="app">
   <aside class="sidebar">
-    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v4.2</h2>
-    <div class="tagline">Загрузите любой Excel — сервис сам разберёт структуру</div>
+    <h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v4.3</h2>
+    <div class="tagline">Загрузите Excel → отредактируйте → скачайте PDF</div>
 
     <div class="panel">
       <h3>1. Загрузка расчёта</h3>
@@ -241,6 +264,10 @@ tr.grand-total td span{color:var(--yellow)}
       </div>
     </div>
 
+    <div id="editHint" class="edit-hint" style="display:none;margin-bottom:16px">
+      💡 <b>Кликните на любую ячейку</b> — отредактируйте значение. Наведите на строку и нажмите <b>×</b> чтобы удалить. Итоги пересчитываются автоматически.
+    </div>
+
     <div id="emptyState" class="empty">
       <div class="big">📄</div>
       <h2>Превью появится здесь</h2>
@@ -255,8 +282,8 @@ tr.grand-total td span{color:var(--yellow)}
 
 <script>
 /* ============================================================
-   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v4.2
-   + Многострочные заголовки
+   ЛУЧСТРОЙ КП-ГЕНЕРАТОР v4.3
+   + Редактирование превью (добавление/удаление строк)
    ============================================================ */
 
 /* ==================== IndexedDB ==================== */
@@ -324,11 +351,16 @@ async function clearHistoryDB(){
   });
 }
 
-/* ==================== Утилиты даты ==================== */
+/* ==================== Утилиты ==================== */
 function pad2(n){return String(n).padStart(2,'0');}
 function todayIso(){const d=new Date();return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;}
 function nowTime(){const d=new Date();return `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;}
 function isoToDisplay(iso){if(!iso)return'';const[y,m,d]=iso.split('-');return(y&&m&&d)?`${d}.${m}.${y}`:iso;}
+function escapeHtml(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
 
 /* ==================== Автономер КП ==================== */
 async function generateKpNumber(){
@@ -380,8 +412,8 @@ async function renderHistory(){
       el.className='history-item';
       const dateLine=it.date?`${it.date}${it.time?' '+it.time:''}`:fmtDateTime(it.savedAt);
       el.innerHTML=`
-        <div class="hi-top"><span class="hi-num">№ ${it.kpNumber||'—'}</span><span class="hi-date">${dateLine}</span></div>
-        <div class="hi-client">${it.client||'—'}</div>
+        <div class="hi-top"><span class="hi-num">№ ${escapeHtml(it.kpNumber||'—')}</span><span class="hi-date">${dateLine}</span></div>
+        <div class="hi-client">${escapeHtml(it.client||'—')}</div>
         <div class="hi-total">${fmt(it.total)} ₽ · НДС ${it.vat}%</div>
         <div class="hi-actions">
           <button data-act="open">⬇ PDF</button>
@@ -472,7 +504,6 @@ function isNumericCell(v){
 function isTextCell(v){if(isEmpty(v))return false;if(typeof v==='number')return false;return /[а-яёa-z]/i.test(String(v));}
 function cellLen(v){return isEmpty(v)?0:String(v).trim().length;}
 
-/* ---------- Определение основной строки заголовков ---------- */
 function findHeaderRow(rows){
   let best=-1,bestScore=0;
   const limit=Math.min(15,rows.length);
@@ -481,49 +512,31 @@ function findHeaderRow(rows){
     if(!r.length)continue;
     let textCount=0,nonEmpty=0,unique=new Set();
     r.forEach(c=>{
-      if(!isEmpty(c)){
-        nonEmpty++;
-        unique.add(String(c).trim().toLowerCase());
-        if(isTextCell(c))textCount++;
-      }
+      if(!isEmpty(c)){nonEmpty++;unique.add(String(c).trim().toLowerCase());if(isTextCell(c))textCount++;}
     });
     const score=nonEmpty>=3&&textCount/nonEmpty>=0.4?textCount+unique.size*0.5:0;
     if(score>bestScore){bestScore=score;best=i;}
   }
   return best;
 }
-
-/* ---------- Определение ДИАПАЗОНА заголовков (1-3 строки) ---------- */
 function detectHeaderRange(rows){
   const start=findHeaderRow(rows);
   if(start<0)return{start:-1,end:-1};
-
   let end=start;
   for(let i=start+1;i<Math.min(start+3,rows.length);i++){
     const r=rows[i]||[];
     if(!r.length)break;
     let textCount=0,nonEmpty=0,numCount=0,totalLen=0;
     r.forEach(c=>{
-      if(!isEmpty(c)){
-        nonEmpty++;
-        totalLen+=String(c).length;
-        if(isNumericCell(c))numCount++;
-        else if(isTextCell(c))textCount++;
-      }
+      if(!isEmpty(c)){nonEmpty++;totalLen+=String(c).length;if(isNumericCell(c))numCount++;else if(isTextCell(c))textCount++;}
     });
     if(nonEmpty===0)break;
     const avgLen=totalLen/nonEmpty;
-    // Подзаголовок: почти весь текст, нет чисел, короткие ячейки
-    if(numCount===0&&textCount/nonEmpty>=0.6&&avgLen<35){
-      end=i;
-      continue;
-    }
+    if(numCount===0&&textCount/nonEmpty>=0.6&&avgLen<35){end=i;continue;}
     break;
   }
   return{start,end};
 }
-
-/* ---------- Слияние заголовков в одну строку ---------- */
 function buildMergedHeader(rows,start,end){
   const maxCols=Math.max(...rows.slice(start,end+1).map(r=>(r||[]).length));
   const merged=[];
@@ -533,7 +546,6 @@ function buildMergedHeader(rows,start,end){
       const v=(rows[r]||[])[c];
       if(!isEmpty(v)){
         const s=String(v).trim();
-        // Не дублируем одинаковые слова
         const low=s.toLowerCase();
         if(!parts.some(p=>p.toLowerCase()===low))parts.push(s);
       }
@@ -542,8 +554,6 @@ function buildMergedHeader(rows,start,end){
   }
   return merged;
 }
-
-/* ---------- Анализ колонки по содержимому ---------- */
 function analyzeColumn(rows,colIdx,fromRow,toRow){
   let nums=0,texts=0,empties=0,total=0,sumVal=0,avgLen=0;
   for(let i=fromRow;i<toRow;i++){
@@ -562,53 +572,34 @@ function analyzeColumn(rows,colIdx,fromRow,toRow){
     sum:sumVal
   };
 }
-
-/* ---------- Распознавание типов колонок ---------- */
 function guessColumnTypes(rows,header,headerEnd){
-  const bodyStart=headerEnd+1;
-  const bodyEnd=rows.length;
-  const numCols=header.length;
-
+  const bodyStart=headerEnd+1,bodyEnd=rows.length,numCols=header.length;
   const analysis=[];
   for(let c=0;c<numCols;c++)analysis.push(analyzeColumn(rows,c,bodyStart,bodyEnd));
-
   const h=header.map(x=>String(x||'').trim().toLowerCase());
-
-  // Более гибкие паттерны
   const keywordMap={
-    num:    /(^№|^no\.?$|номер|позици|п\/п|поз\.?$)/i,
-    name:   /(наимен|назван|технич.*характер|описание|товар|услуг|работ|материал)/i,
-    req:    /(требован|гост|марка|тип|обознач|специф|опросн)/i,
-    code:   /(^код|артикул)/i,
-    vendor: /(завод|изготов|производ|бренд)/i,
-    unit:   /(ед\.?\s*изм|ед\.$|единиц|^ед$|^мера)/i,
-    qty:    /(кол-?во|колич|объ[её]м|количество)/i,
-    mass:   /(масса|вес)/i,
-    note:   /(примеч|коммент|note)/i,
-    price:  /(цена|расценка|price|за\s+ед|стоимост[ьи]\s+за)/i,
-    sum:    /(сумма|итого|всего|total)/i
+    num:/(^№|^no\.?$|номер|позици|п\/п|поз\.?$)/i,
+    name:/(наимен|назван|технич.*характер|описание|товар|услуг|работ|материал)/i,
+    req:/(требован|гост|марка|тип|обознач|специф|опросн)/i,
+    code:/(^код|артикул)/i,
+    vendor:/(завод|изготов|производ|бренд)/i,
+    unit:/(ед\.?\s*изм|ед\.$|единиц|^ед$|^мера)/i,
+    qty:/(кол-?во|колич|объ[её]м|количество)/i,
+    mass:/(масса|вес)/i,
+    note:/(примеч|коммент|note)/i,
+    price:/(цена|расценка|price|за\s+ед|стоимост[ьи]\s+за)/i,
+    sum:/(сумма|итого|всего|total)/i
   };
-
   const scores={};
   for(const field in keywordMap)scores[field]=[];
-
   for(let c=0;c<numCols;c++){
-    const a=analysis[c];
-    const hc=h[c]||'';
+    const a=analysis[c],hc=h[c]||'';
     for(const field in keywordMap){
-      if(keywordMap[field].test(hc)){
-        scores[field].push({col:c,score:100+a.textRatio*5});
-      }
+      if(keywordMap[field].test(hc))scores[field].push({col:c,score:100+a.textRatio*5});
     }
-    if(a.textRatio>0.5&&a.avgLen>15&&a.nonEmpty>2){
-      scores.name.push({col:c,score:40+Math.min(a.avgLen,80)/2});
-    }
-    if(a.textRatio>0.6&&a.avgLen>0&&a.avgLen<6&&a.nonEmpty>3){
-      scores.unit.push({col:c,score:30+(5-a.avgLen)*3});
-    }
-    if(a.textRatio>0.5&&a.avgLen>=6&&a.avgLen<=60&&a.nonEmpty>0){
-      scores.note.push({col:c,score:15});
-    }
+    if(a.textRatio>0.5&&a.avgLen>15&&a.nonEmpty>2)scores.name.push({col:c,score:40+Math.min(a.avgLen,80)/2});
+    if(a.textRatio>0.6&&a.avgLen>0&&a.avgLen<6&&a.nonEmpty>3)scores.unit.push({col:c,score:30+(5-a.avgLen)*3});
+    if(a.textRatio>0.5&&a.avgLen>=6&&a.avgLen<=60&&a.nonEmpty>0)scores.note.push({col:c,score:15});
     if(a.numericRatio>0.7&&a.nonEmpty>1){
       const avg=a.sum/a.nonEmpty;
       if(avg>5000)scores.sum.push({col:c,score:35});
@@ -617,40 +608,32 @@ function guessColumnTypes(rows,header,headerEnd){
       if(c===0&&avg<1000)scores.num.push({col:c,score:25});
     }
   }
-
-  const result={};
-  const usedCols=new Set();
+  const result={},usedCols=new Set();
   const order=['num','name','unit','qty','price','sum','req','code','vendor','mass','note'];
   for(const field of order){
     const list=(scores[field]||[]).filter(x=>!usedCols.has(x.col));
     if(!list.length)continue;
     list.sort((a,b)=>b.score-a.score);
-    result[field]=list[0].col;
-    usedCols.add(list[0].col);
+    result[field]=list[0].col;usedCols.add(list[0].col);
   }
   return result;
 }
-
-/* ---------- Разделы ---------- */
 function detectSections(rows,headerEnd,colMap){
   const nameCol=colMap.name,qtyCol=colMap.qty,sumCol=colMap.sum,priceCol=colMap.price;
   const sections=[];
   let current={title:'ПОЗИЦИИ',rows:[],total:0};
-
   for(let i=headerEnd+1;i<rows.length;i++){
     const r=rows[i]||[];
     const nameVal=nameCol!==undefined?String(r[nameCol]||'').trim():'';
     const firstVal=String(r[0]||'').trim();
     const nonEmpty=r.filter(c=>!isEmpty(c)).length;
     if(nonEmpty===0)continue;
-
     if(!nameVal&&firstVal&&isTextCell(firstVal)){
       if(current.rows.length)sections.push(current);
       current={title:firstVal.toUpperCase(),rows:[],total:0};
       continue;
     }
     if(!nameVal&&!firstVal)continue;
-
     if(nameVal){
       const qty=qtyCol!==undefined?parseNum(r[qtyCol]):null;
       const price=priceCol!==undefined?parseNum(r[priceCol]):null;
@@ -660,8 +643,7 @@ function detectSections(rows,headerEnd,colMap){
         num:colMap.num!==undefined?String(r[colMap.num]||'').trim():String(current.rows.length+1),
         name:nameVal,
         req:colMap.req!==undefined?String(r[colMap.req]||'').trim():'',
-        qty,
-        unit:colMap.unit!==undefined?String(r[colMap.unit]||'').trim():'',
+        qty,unit:colMap.unit!==undefined?String(r[colMap.unit]||'').trim():'',
         price,sum,
         note:colMap.note!==undefined?String(r[colMap.note]||'').trim():''
       });
@@ -671,24 +653,19 @@ function detectSections(rows,headerEnd,colMap){
   sections.forEach(s=>{s.total=s.rows.reduce((a,r)=>a+(r.sum||0),0);});
   return sections;
 }
-
-/* ---------- Пересборка ---------- */
 function parseAndBuild(){
   if(!RAW_ROWS)return;
   if(HEADER_IDX<0){setStatus('err','Не найдена строка заголовков');return;}
-
   const colMap={};
   document.querySelectorAll('.mapper select').forEach(sel=>{
     const field=sel.dataset.field,val=sel.value;
     if(val!==''&&val!=='skip')colMap[field]=parseInt(val,10);
   });
   COL_MAP=colMap;
-
   const sections=detectSections(RAW_ROWS,HEADER_END,colMap);
   const grandTotal=sections.reduce((a,s)=>a+s.total,0);
   const rowsCount=sections.reduce((a,s)=>a+s.rows.length,0);
   PARSED={sections,grandTotal,colMap,headerIdx:HEADER_IDX,headerEnd:HEADER_END};
-
   if(rowsCount===0){
     setStatus('err','Не удалось распознать позиции. Проверьте сопоставление колонок.');
     document.getElementById('btnBuild').disabled=true;
@@ -697,35 +674,27 @@ function parseAndBuild(){
   setStatus('ok',`Распознано: ${sections.length} раздел(ов), ${rowsCount} позиций, итого ${fmt(grandTotal)} ₽`);
   document.getElementById('btnBuild').disabled=false;
 }
-
-/* ---------- UI сопоставления ---------- */
 function buildMapperUI(rows,header,headerEnd){
   const numCols=header.length;
   const detected=guessColumnTypes(rows,header,headerEnd);
   const mapper=document.getElementById('mapper');
   mapper.innerHTML='';
   const order=['num','name','req','code','vendor','unit','qty','price','sum','mass','note'];
-
   order.forEach(field=>{
     const row=document.createElement('div');
     row.className='map-row';
     const label=document.createElement('label');
     label.textContent=FIELD_LABELS[field];
     row.appendChild(label);
-
     const sel=document.createElement('select');
     sel.dataset.field=field;
-
     const optSkip=document.createElement('option');
-    optSkip.value='skip';
-    optSkip.textContent=FIELD_LABELS.skip;
+    optSkip.value='skip';optSkip.textContent=FIELD_LABELS.skip;
     sel.appendChild(optSkip);
-
     for(let c=0;c<numCols;c++){
       const opt=document.createElement('option');
       opt.value=c;
       const hName=String(header[c]||'').trim();
-      // Образец берём ПОСЛЕ всех заголовков
       const sample=(()=>{
         for(let i=headerEnd+1;i<Math.min(headerEnd+8,rows.length);i++){
           const v=(rows[i]||[])[c];
@@ -736,31 +705,19 @@ function buildMapperUI(rows,header,headerEnd){
       opt.textContent=`${String.fromCharCode(65+c)} — ${hName||'(пусто)'}${sample?' · '+sample:''}`;
       sel.appendChild(opt);
     }
-
-    if(detected[field]!==undefined){
-      sel.value=detected[field];
-      sel.classList.add('found');
-    }else{
-      sel.value='skip';
-      if(REQUIRED.includes(field))sel.classList.add('missing');
-    }
-
+    if(detected[field]!==undefined){sel.value=detected[field];sel.classList.add('found');}
+    else{sel.value='skip';if(REQUIRED.includes(field))sel.classList.add('missing');}
     sel.addEventListener('change',()=>{
       sel.classList.remove('found','missing');
       if(sel.value!=='skip')sel.classList.add('found');
       else if(REQUIRED.includes(field))sel.classList.add('missing');
       parseAndBuild();
     });
-
-    row.appendChild(sel);
-    mapper.appendChild(row);
+    row.appendChild(sel);mapper.appendChild(row);
   });
-
   document.getElementById('mapperPanel').style.display='block';
   document.getElementById('mapper').classList.add('show');
 }
-
-/* ---------- Обработка файла ---------- */
 function handleFile(file){
   setStatus('warn','Читаем файл…');
   const reader=new FileReader();
@@ -798,22 +755,140 @@ function getMeta(){
   };
 }
 
-/* ---------- Превью ---------- */
+/* ==================== Пересчёт итогов ==================== */
+function recalcTotals(){
+  if(!PARSED)return;
+  PARSED.sections.forEach(s=>{
+    s.total=s.rows.reduce((a,r)=>a+(r.sum||0),0);
+  });
+  PARSED.grandTotal=PARSED.sections.reduce((a,s)=>a+s.total,0);
+}
+function updateTotalsInDOM(){
+  if(!PARSED)return;
+  PARSED.sections.forEach((s,secIdx)=>{
+    const el=document.querySelector(`[data-sec-total="${secIdx}"]`);
+    if(el)el.textContent=fmt(s.total);
+  });
+  const gt=document.querySelector('[data-grand-total] span');
+  if(gt)gt.textContent=fmt(PARSED.grandTotal)+' ₽';
+  const m=getMeta();
+  const dtLine=`${m.date}${m.time?' '+m.time:''}`;
+  document.getElementById('toolbarInfo').innerHTML=`КП <b>№ ${m.kpNumber}</b> от ${dtLine} · <b>${fmt(PARSED.grandTotal)} ₽</b> с НДС ${m.vat}%`;
+}
+
+/* ==================== Структурные операции ==================== */
+function deleteRow(secIdx,rowIdx){
+  if(!PARSED)return;
+  if(!confirm('Удалить эту строку?'))return;
+  PARSED.sections[secIdx].rows.splice(rowIdx,1);
+  recalcTotals();
+  buildPreview();
+  setStatus('ok','Строка удалена');
+}
+function addRow(secIdx){
+  if(!PARSED)return;
+  const rows=PARSED.sections[secIdx].rows;
+  rows.push({
+    num:String(rows.length+1),name:'Новая позиция',req:'',
+    qty:1,unit:'шт.',price:0,sum:0,note:''
+  });
+  recalcTotals();
+  buildPreview();
+  setStatus('ok','Строка добавлена');
+}
+function deleteSection(secIdx){
+  if(!PARSED)return;
+  if(!confirm('Удалить весь раздел со всеми строками?'))return;
+  PARSED.sections.splice(secIdx,1);
+  if(!PARSED.sections.length){
+    PARSED.sections.push({title:'НОВЫЙ РАЗДЕЛ',rows:[],total:0});
+  }
+  recalcTotals();
+  buildPreview();
+  setStatus('ok','Раздел удалён');
+}
+function addSection(){
+  if(!PARSED)return;
+  PARSED.sections.push({title:'НОВЫЙ РАЗДЕЛ',rows:[],total:0});
+  recalcTotals();
+  buildPreview();
+  setStatus('ok','Раздел добавлен');
+}
+
+/* ==================== Редактирование ячеек ==================== */
+function onCellEdit(cell){
+  if(!PARSED)return;
+  const secIdx=parseInt(cell.dataset.sec,10);
+  const rowIdx=cell.dataset.row!==undefined?parseInt(cell.dataset.row,10):-1;
+  const field=cell.dataset.field;
+  const text=cell.textContent.trim();
+
+  if(field==='secTitle'){
+    PARSED.sections[secIdx].title=text||'РАЗДЕЛ';
+    return;
+  }
+  if(rowIdx<0)return;
+  const row=PARSED.sections[secIdx].rows[rowIdx];
+  if(!row)return;
+
+  if(field==='qty'||field==='price'||field==='sum'){
+    const num=parseNum(text);
+    row[field]=num;
+    if(field==='qty'||field==='price'){
+      if(row.qty!==null&&row.price!==null){
+        row.sum=row.qty*row.price;
+        const sumCell=cell.closest('tr').querySelector('[data-field="sum"]');
+        if(sumCell)sumCell.textContent=fmt(row.sum);
+      }
+    }
+    cell.textContent=(num!==null)?fmt(num):'';
+  }else{
+    row[field]=text;
+  }
+  recalcTotals();
+  updateTotalsInDOM();
+}
+function setupEditablePreview(){
+  const el=document.getElementById('pdf-content');
+  el.querySelectorAll('[contenteditable="true"]').forEach(cell=>{
+    cell.addEventListener('keydown',e=>{
+      if(e.key==='Enter'&&!e.shiftKey){
+        e.preventDefault();
+        cell.blur();
+      }
+    });
+    cell.addEventListener('blur',()=>onCellEdit(cell));
+    // Простая защита от вставки HTML
+    cell.addEventListener('paste',e=>{
+      e.preventDefault();
+      const text=(e.clipboardData||window.clipboardData).getData('text/plain');
+      document.execCommand('insertText',false,text);
+    });
+  });
+}
+
+/* ==================== Превью ==================== */
 function buildPreview(){
   if(!PARSED){setStatus('err','Сначала загрузите расчёт');return;}
+  const pw=document.querySelector('.preview-wrap');
+  const scrollTop=pw?pw.scrollTop:0;
   const m=getMeta();
   const el=document.getElementById('pdf-content');
   el.innerHTML=renderKP(PARSED,m);
   el.style.display='block';
   document.getElementById('emptyState').style.display='none';
+  document.getElementById('editHint').style.display='block';
   const dtLine=`${m.date}${m.time?' '+m.time:''}`;
   document.getElementById('toolbarInfo').innerHTML=`КП <b>№ ${m.kpNumber}</b> от ${dtLine} · <b>${fmt(PARSED.grandTotal)} ₽</b> с НДС ${m.vat}%`;
   document.getElementById('btnPdf').disabled=false;
   document.getElementById('btnPrint').disabled=false;
   document.getElementById('btnPdf2').disabled=false;
   document.getElementById('btnPrint2').disabled=false;
-  setStatus('ok','Превью сформировано');
+  setupEditablePreview();
+  if(pw)pw.scrollTop=scrollTop;
+  setStatus('ok','Превью сформировано. Кликните на ячейку для редактирования.');
 }
+
 function renderKP(data,m){
   const{sections,grandTotal}=data;
   const rowsCount=sections.reduce((a,s)=>a+s.rows.length,0);
@@ -828,64 +903,109 @@ function renderKP(data,m){
   const dateTimeLine=`${m.date}${m.time?' '+m.time:''}`;
   return`
   <div class="corp-header">
-    <div class="top"><div class="corp-logo">ЛУЧ<span>СТРОЙ</span> ГРУПП</div><div class="corp-badge">КП № ${m.kpNumber} от ${dateTimeLine}</div></div>
-    <h1>${m.object}</h1>
-    <div class="subtitle">${m.subtitle}</div>
-    <div class="client">Заказчик: <b>${m.client}</b></div>
+    <div class="top"><div class="corp-logo">ЛУЧ<span>СТРОЙ</span> ГРУПП</div><div class="corp-badge">КП № ${escapeHtml(m.kpNumber)} от ${dateTimeLine}</div></div>
+    <h1>${escapeHtml(m.object)}</h1>
+    <div class="subtitle">${escapeHtml(m.subtitle)}</div>
+    <div class="client">Заказчик: <b>${escapeHtml(m.client)}</b></div>
   </div>
   <div class="corp-body">${heroHTML}${tablesHTML}</div>
   <div class="corp-footer">
     <div class="grid">
       <div>
-        <h3>${m.company}</h3>
-        <p>${m.address}</p>
-        <p>Тел.: <a href="tel:${m.phone.replace(/[^\d+]/g,'')}">${m.phone}</a></p>
-        <p>Email: <a href="mailto:${m.email}">${m.email}</a></p>
-        <p>Сайт: <a href="${m.site}">${m.site}</a></p>
+        <h3>${escapeHtml(m.company)}</h3>
+        <p>${escapeHtml(m.address)}</p>
+        <p>Тел.: <a href="tel:${m.phone.replace(/[^\d+]/g,'')}">${escapeHtml(m.phone)}</a></p>
+        <p>Email: <a href="mailto:${escapeHtml(m.email)}">${escapeHtml(m.email)}</a></p>
+        <p>Сайт: <a href="${escapeHtml(m.site)}">${escapeHtml(m.site)}</a></p>
       </div>
       <div style="text-align:right"><img class="qr" src="${qrURL}" alt="QR"></div>
     </div>
-    <div class="sign"><div>Генеральный директор: <b>${m.director}</b></div><div>Исполнитель: <b>${m.manager}</b></div></div>
+    <div class="sign"><div>Генеральный директор: <b>${escapeHtml(m.director)}</b></div><div>Исполнитель: <b>${escapeHtml(m.manager)}</b></div></div>
     <p style="margin-top:16px;color:#9ca3af;font-size:12px">КП сформировано ${dateTimeLine}. Срок действия — ${m.validity} календарных дней со дня фактического получения. Цены указаны с НДС ${m.vat}%.</p>
   </div>`;
 }
+
 function renderVariantTables(sections,m,total){
   let html='';
-  sections.forEach(s=>{
-    html+=`<h2 class="corp-section-title">${s.title}</h2><div class="table-wrap"><table>
+  sections.forEach((s,secIdx)=>{
+    // Заголовок раздела с возможностью редактирования
+    html+=`<h2 class="corp-section-title">
+      <span class="sec-title-text" contenteditable="true" data-sec="${secIdx}" data-field="secTitle">${escapeHtml(s.title)}</span>
+      <button class="sec-del no-print" onclick="deleteSection(${secIdx})" title="Удалить раздел">🗑</button>
+    </h2>`;
+
+    html+=`<div class="table-wrap"><table>
       <thead><tr>
-        <th style="width:36px">№</th><th>Наименование</th><th>Требования</th>
-        <th class="num" style="width:70px">Кол-во</th><th class="center" style="width:50px">Ед.</th>
-        <th class="num" style="width:90px">Цена, ₽</th><th class="num" style="width:100px">Сумма, ₽</th>
+        <th class="col-actions no-print"></th>
+        <th style="width:36px">№</th>
+        <th>Наименование</th>
+        <th>Требования</th>
+        <th class="num" style="width:70px">Кол-во</th>
+        <th class="center" style="width:50px">Ед.</th>
+        <th class="num" style="width:90px">Цена, ₽</th>
+        <th class="num" style="width:100px">Сумма, ₽</th>
         <th>Примечание</th>
       </tr></thead><tbody>`;
-    s.rows.forEach((r,idx)=>{
+
+    s.rows.forEach((r,rowIdx)=>{
       html+=`<tr>
-        <td class="center">${r.num||idx+1}</td><td>${r.name||''}</td><td>${r.req||''}</td>
-        <td class="num">${r.qty!==null?fmt(r.qty):''}</td>
-        <td class="center">${r.unit||''}</td>
-        <td class="num">${r.price!==null?fmt(r.price):''}</td>
-        <td class="num">${r.sum!==null?fmt(r.sum):''}</td>
-        <td>${r.note||''}</td>
+        <td class="col-actions no-print">
+          <button class="row-del" onclick="deleteRow(${secIdx},${rowIdx})" title="Удалить строку">×</button>
+        </td>
+        <td class="center" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="num">${escapeHtml(r.num||rowIdx+1)}</td>
+        <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="name">${escapeHtml(r.name||'')}</td>
+        <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="req">${escapeHtml(r.req||'')}</td>
+        <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="qty">${r.qty!==null&&r.qty!==undefined?fmt(r.qty):''}</td>
+        <td class="center" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="unit">${escapeHtml(r.unit||'')}</td>
+        <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="price">${r.price!==null&&r.price!==undefined?fmt(r.price):''}</td>
+        <td class="num" contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="sum">${r.sum!==null&&r.sum!==undefined?fmt(r.sum):''}</td>
+        <td contenteditable="true" data-sec="${secIdx}" data-row="${rowIdx}" data-field="note">${escapeHtml(r.note||'')}</td>
       </tr>`;
     });
-    html+=`<tr class="total-row"><td colspan="6" style="text-align:right">Итого по разделу</td><td class="num">${fmt(s.total)}</td><td></td></tr></tbody></table></div>`;
+
+    html+=`<tr class="total-row">
+      <td class="col-actions no-print"></td>
+      <td colspan="6" style="text-align:right">Итого по разделу</td>
+      <td class="num" data-sec-total="${secIdx}">${fmt(s.total)}</td>
+      <td></td>
+    </tr></tbody></table></div>`;
+
+    html+=`<div class="table-actions no-print">
+      <button class="add-row-btn" onclick="addRow(${secIdx})">+ Добавить строку</button>
+    </div>`;
   });
+
   html+=`<div class="table-wrap"><table><tbody><tr class="grand-total">
     <td style="text-align:right">ИТОГО с НДС ${m.vat}%</td>
-    <td class="num" style="width:180px"><span>${fmt(total)} ₽</span></td>
+    <td class="num" style="width:180px" data-grand-total><span>${fmt(total)} ₽</span></td>
     <td style="width:40%"></td></tr></tbody></table></div>`;
+
+  html+=`<div class="table-actions no-print">
+    <button class="add-section-btn" onclick="addSection()">+ Добавить раздел</button>
+  </div>`;
+
   return html;
 }
 
-/* ---------- PDF ---------- */
+/* ==================== PDF ==================== */
 function downloadPDF(){
   if(!PARSED){setStatus('err','Сначала сформируйте превью');return;}
   const loader=document.getElementById('pdf-loader');
   loader.style.display='flex';
   const m=getMeta();
-  const filename=`КП_ЛучСтройГрупп_${m.kpNumber.replace(/[^\w\-]/g,'')}.pdf`;
-  const element=document.getElementById('pdf-content');
+  const filename=`КП_ЛучСтройГрупп_${(m.kpNumber||'').replace(/[^\w\-]/g,'')}.pdf`;
+  const source=document.getElementById('pdf-content');
+
+  // Клонируем и очищаем от служебных элементов
+  const clone=source.cloneNode(true);
+  clone.querySelectorAll('.no-print').forEach(el=>el.remove());
+  clone.querySelectorAll('.col-actions').forEach(el=>el.remove());
+  clone.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));
+  clone.querySelectorAll('.table-actions').forEach(el=>el.remove());
+  clone.classList.add('printing');
+  clone.style.display='block';
+  clone.style.background='#fff';
+
   const opt={
     margin:[8,6,8,6],filename,
     image:{type:'jpeg',quality:0.98},
@@ -893,7 +1013,8 @@ function downloadPDF(){
     jsPDF:{unit:'mm',format:'a4',orientation:'portrait'},
     pagebreak:{mode:['css','avoid-all'],avoid:'tr,.corp-card,.corp-section-title'}
   };
-  html2pdf().set(opt).from(element).outputPdf('blob').then(async blob=>{
+
+  html2pdf().set(opt).from(clone).outputPdf('blob').then(async blob=>{
     try{await savePdfToHistory(blob,m,PARSED);await renderHistory();}catch(err){console.error(err);}
     const url=URL.createObjectURL(blob);
     const a=document.createElement('a');
@@ -909,7 +1030,7 @@ function downloadPDF(){
   });
 }
 
-/* ---------- Пример / сброс ---------- */
+/* ==================== Пример / сброс ==================== */
 function useSample(){
   const sample=[
     ['№','Наименование','ГОСТ / ТУ','Кол-во','Ед.','Цена','Сумма','Примечание'],
@@ -929,13 +1050,14 @@ function resetAll(){
   document.getElementById('mapperPanel').style.display='none';
   document.getElementById('pdf-content').style.display='none';
   document.getElementById('emptyState').style.display='flex';
+  document.getElementById('editHint').style.display='none';
   ['btnBuild','btnPdf','btnPrint','btnPdf2','btnPrint2'].forEach(id=>document.getElementById(id).disabled=true);
   document.getElementById('toolbarInfo').textContent='Загрузите расчёт, чтобы увидеть превью';
   document.getElementById('fileInput').value='';
   setStatus('ok','Сброшено');
 }
 
-/* ---------- Слушатели ---------- */
+/* ==================== Слушатели ==================== */
 document.getElementById('dropzone').addEventListener('click',()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change',e=>{if(e.target.files[0])handleFile(e.target.files[0]);});
 const dz=document.getElementById('dropzone');
@@ -947,7 +1069,14 @@ document.getElementById('btnPdf').addEventListener('click',downloadPDF);
 document.getElementById('btnPrint').addEventListener('click',()=>window.print());
 ['kpNumber','kpDate','kpTime','client','object','subtitle','vat','validity','company','address','phone','email','site','director','manager'].forEach(id=>{
   document.getElementById(id).addEventListener('input',()=>{
-    if(PARSED&&document.getElementById('pdf-content').style.display!=='none')buildPreview();
+    if(PARSED&&document.getElementById('pdf-content').style.display!=='none'){
+      // Быстрое обновление шапки и подвала без полного рендера
+      const m=getMeta();
+      const dtLine=`${m.date}${m.time?' '+m.time:''}`;
+      document.getElementById('toolbarInfo').innerHTML=`КП <b>№ ${m.kpNumber}</b> от ${dtLine} · <b>${fmt(PARSED.grandTotal)} ₽</b> с НДС ${m.vat}%`;
+      // Полный рендер, чтобы обновить все поля
+      buildPreview();
+    }
   });
 });
 document.getElementById('kpDate').addEventListener('change',async()=>{
@@ -957,7 +1086,7 @@ document.getElementById('kpDate').addEventListener('change',async()=>{
   }
 });
 
-/* ---------- Инициализация ---------- */
+/* ==================== Инициализация ==================== */
 (async()=>{await initDefaults();await renderHistory();})();
 </script>
 </body>
