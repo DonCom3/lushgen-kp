@@ -229,10 +229,10 @@ function isTextCell(v){const nv=normCell(v);if(nv===null)return false;if(typeof 
 function cellLen(v){const nv=normCell(v);return nv===null?0:String(nv).trim().length;}
 
 /* Колонки */
-const COL_VISIBLE={num:true,name:true,req:false,qty:true,unit:true,work_price:true,work_sum:true,material_price:true,material_sum:true,price:true,sum:true,totalSum:true,note:true};
+const COL_VISIBLE={num:true,name:true,req:false,qty:true,unit:true,work_price:true,work_sum:true,material_price:true,material_sum:true,price:true,sum:true,totalSum:true,note:false};
 const COL_TITLES={num:'№',name:'Наименование',req:'Требования',qty:'Кол-во',unit:'Ед.',work_price:'Цена работ',work_sum:'Сумма работ',material_price:'Цена материал.',material_sum:'Сумма материал.',price:'Цена',sum:'Сумма',totalSum:'Итого',note:'Примечание'};
-try{const sv=localStorage.getItem('kp_cols');if(sv)Object.assign(COL_VISIBLE,JSON.parse(sv));}catch(e){}
-function saveColVis(){try{localStorage.setItem('kp_cols',JSON.stringify(COL_VISIBLE));}catch(e){}}
+try{const sv=localStorage.getItem('kp_cols_v2');if(sv)Object.assign(COL_VISIBLE,JSON.parse(sv));}catch(e){}
+function saveColVis(){try{localStorage.setItem('kp_cols_v2',JSON.stringify(COL_VISIBLE));}catch(e){}}
 function initColToggles(){
   const box=document.getElementById('colToggles');box.innerHTML='';
   Object.keys(COL_TITLES).forEach(k=>{
