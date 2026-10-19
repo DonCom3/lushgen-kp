@@ -210,7 +210,7 @@ tr.drag-over { border-top: 2px solid var(--y) !important; }
 <script>
 console.log('App loaded, starting...');
 
-/* Загрузка логотипа */
+/* Загрузка логотипа со сжатием */
 let LOGO_DATA = null;
 function loadLogo() {
     return new Promise((resolve) => {
@@ -219,10 +219,21 @@ function loadLogo() {
         img.onload = () => {
             try {
                 const canvas = document.createElement('canvas');
-                canvas.width = img.width;
-                canvas.height = img.height;
-                canvas.getContext('2d').drawImage(img, 0, 0);
-                LOGO_DATA = canvas.toDataURL('image/png'); 
+                const maxSize = 300;
+                let w = img.width;
+                let h = img.height;
+                if (w > maxSize || h > maxSize) {
+                    const ratio = Math.min(maxSize / w, maxSize / h);
+                    w = Math.floor(w * ratio);
+                    h = Math.floor(h * ratio);
+                }
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = '#ffffff'; // Белый фон
+                ctx.fillRect(0, 0, w, h);
+                ctx.drawImage(img, 0, 0, w, h);
+                LOGO_DATA = canvas.toDataURL('image/jpeg', 0.85); 
                 resolve(LOGO_DATA);
             } catch (e) { resolve(null); }
         };
@@ -705,7 +716,7 @@ return null;
 async function urlToDataUrl(url){
 return new Promise(res=>{
 const img=new Image();img.crossOrigin='anonymous';
-img.onload=()=>{try{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0);res(c.toDataURL('image/png'));}catch(e){res(null);}};
+img.onload=()=>{try{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0);res(c.toDataURL('image/jpeg', 0.9));}catch(e){res(null);}};
 img.onerror=()=>res(null);img.src=url;
 });
 }
@@ -715,7 +726,8 @@ const J=window.jspdf.jsPDF;
 const font=await loadPdfFont();
 const split=parsed.sections.some(s=>s.rows.some(r=>r.split));
 const orientation=split?'landscape':'portrait';
-const doc=new J({orientation,unit:'mm',format:'a4'});
+// Включаем сжатие PDF (compress: true)
+const doc=new J({orientation,unit:'mm',format:'a4',compress:true});
 if(font){doc.addFileToVFS('Roboto.ttf',font);doc.addFont('Roboto.ttf','Roboto','normal');doc.addFont('Roboto.ttf','Roboto','bold');doc.setFont('Roboto');}
 const ff=font?'Roboto':'helvetica';
 const PW=split?297:210,PH=split?210:297;
@@ -728,7 +740,7 @@ doc.setFillColor(43,47,51);doc.rect(M,M,W,hh,'F');
 
 // Логотип в правом верхнем углу
 if (LOGO_DATA) {
-    try { doc.addImage(LOGO_DATA, 'PNG', M+W-38, M+4, 32, 32); } catch(e){}
+    try { doc.addImage(LOGO_DATA, 'JPEG', M+W-38, M+4, 32, 32); } catch(e){}
 } else {
     doc.setFillColor(230,170,20);doc.circle(M+W-10,M+10,18,'F');
 }
@@ -741,7 +753,7 @@ doc.setTextColor(255,193,7);doc.text('СТРОЙ',M+6+lw,M+12);
 const sw=doc.getTextWidth('СТРОЙ');
 doc.setTextColor(255,255,255);doc.text(' ГРУПП',M+6+lw+sw,M+12);
 
-// Плашка КП (сдвинута влево, чтобы не перекрывать лого)
+// Плашка КП
 const kpTxt=`КП № ${meta.kpNumber} от ${dtl}`;
 doc.setFont(ff,'normal');doc.setFontSize(9);
 const kpW=doc.getTextWidth(kpTxt)+8;
@@ -919,7 +931,7 @@ doc.setFont(ff,'normal');doc.setFontSize(8);doc.setTextColor(209,213,219);
 doc.text(meta.address||'',M+5,y+11,{maxWidth:W-50});
 doc.text(`Тел.: ${meta.phone||''}  ·  Email: ${meta.email||''}`,M+5,y+16);
 doc.text(`Сайт: ${meta.site||''}`,M+5,y+20);
-if(qrData){try{doc.addImage(qrData,'PNG',M+W-24,y+4,18,18);}catch(e){}}
+if(qrData){try{doc.addImage(qrData,'JPEG',M+W-24,y+4,18,18);}catch(e){}}
 doc.setFont(ff,'bold');doc.setFontSize(8);doc.setTextColor(255,255,255);
 doc.text(`Директор: ${meta.director||''}`,M+5,y+25);
 doc.text(`Исполнитель: ${meta.manager||''}`,M+W*0.5,y+25);
