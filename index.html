@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ЛучСтрой КП-Генератор v5.1</title>
+<title>ЛучСтрой КП-Генератор</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -143,7 +143,7 @@ tr.row-excluded td.num{text-decoration:line-through;text-decoration-color:#ef444
 <body>
 <div class="app">
 <aside class="sidebar">
-<h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v5.1</h2>
+<h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор</h2>
 <div class="tagline">Работы, материалы, скрытие колонок</div>
 <div class="panel">
 <h3>1. Загрузка расчёта</h3>
@@ -228,7 +228,7 @@ function isNumericCell(v){const nv=normCell(v);if(nv===null)return false;if(type
 function isTextCell(v){const nv=normCell(v);if(nv===null)return false;if(typeof nv==='number')return false;return /[а-яёa-z]/i.test(String(nv));}
 function cellLen(v){const nv=normCell(v);return nv===null?0:String(nv).trim().length;}
 
-/* Колонки */
+/* Колонки (по умолчанию Примечание скрыто) */
 const COL_VISIBLE={num:true,name:true,req:false,qty:true,unit:true,work_price:true,work_sum:true,material_price:true,material_sum:true,price:true,sum:true,totalSum:true,note:false};
 const COL_TITLES={num:'№',name:'Наименование',req:'Требования',qty:'Кол-во',unit:'Ед.',work_price:'Цена работ',work_sum:'Сумма работ',material_price:'Цена материал.',material_sum:'Сумма материал.',price:'Цена',sum:'Сумма',totalSum:'Итого',note:'Примечание'};
 try{const sv=localStorage.getItem('kp_cols_v2');if(sv)Object.assign(COL_VISIBLE,JSON.parse(sv));}catch(e){}
@@ -288,7 +288,7 @@ if(r.work_sum!==undefined&&r.work_price===undefined){const cc=r.work_sum-1;if(cc
 if(r.work_price!==undefined&&r.work_sum===undefined){const cc=r.work_price+1;if(cc<nc&&!u.has(cc)){r.work_sum=cc;u.add(cc);}}
 if(r.material_sum!==undefined&&r.material_price===undefined){const cc=r.material_sum-1;if(cc>=0&&!u.has(cc)){r.material_price=cc;u.add(cc);}}
 if(r.material_price!==undefined&&r.material_sum===undefined){const cc=r.material_price+1;if(cc<nc&&!u.has(cc)){r.material_sum=cc;u.add(cc);}}
-console.log('Detected:',r);return r;
+return r;
 }
 function detectSections(rows,he,cm){
 const nC=cm.name,qC=cm.qty,wpC=cm.work_price,wsC=cm.work_sum,mpC=cm.material_price,msC=cm.material_sum,pC=cm.price,sC=cm.sum;
@@ -303,7 +303,7 @@ if(nv&&SKIP_RE.test(nv))continue;
 if(!nv&&fv&&SKIP_RE.test(fv))continue;
 if(!nv&&fv&&isTextCell(fv)){if(cur.rows.length)secs.push(cur);cur={title:fv.toUpperCase(),rows:[],total:0};continue;}
 if(!nv&&!fv)continue;
-if(nv){
+
 const q=qC!==undefined?parseNum(r[qC]):null;
 const wp=wpC!==undefined?parseNum(r[wpC]):null;
 const mp=mpC!==undefined?parseNum(r[mpC]):null;
@@ -313,13 +313,21 @@ if(ws===null&&q!==null&&wp!==null)ws=q*wp;
 if(ms===null&&q!==null&&mp!==null)ms=q*mp;
 const p=pC!==undefined?parseNum(r[pC]):null;
 let s=sC!==undefined?parseNum(r[sC]):null;
+
 const noNum=q===null&&wp===null&&mp===null&&ws===null&&ms===null&&p===null&&s===null;
-const isSec = noNum && (SECTION_RE.test(nv) || nv.length < 80);
-if(isSec){if(cur.rows.length)secs.push(cur);cur={title:nv.toUpperCase(),rows:[],total:0};continue;}
-const hasSplit=(wp!==null||mp!==null||ws!==null||ms!==null);
-let ts;
-if(hasSplit){ts=(ws||0)+(ms||0);}else{if(s===null&&q!==null&&p!==null)s=q*p;ts=s||0;}
-cur.rows.push({num:cm.num!==undefined?String(normCell(r[cm.num])||'').trim():String(cur.rows.length+1),name:nv,req:cm.req!==undefined?String(normCell(r[cm.req])||'').trim():'',qty:q,unit:cm.unit!==undefined?String(normCell(r[cm.unit])||'').trim():'',work_price:wp,work_sum:ws,material_price:mp,material_sum:ms,price:p,sum:s,split:hasSplit,totalSum:ts,note:cm.note!==undefined?String(normCell(r[cm.note])||'').trim():'',excluded:false});
+const isSec = (nv && noNum && (SECTION_RE.test(nv) || nv.length < 80)) || (!nv && fv && noNum && isTextCell(fv));
+
+if(isSec){
+  if(cur.rows.length)secs.push(cur);
+  cur={title:(nv||fv).toUpperCase(),rows:[],total:0};
+  continue;
+}
+
+if(nv){
+  const hasSplit=(wp!==null||mp!==null||ws!==null||ms!==null);
+  let ts;
+  if(hasSplit){ts=(ws||0)+(ms||0);}else{if(s===null&&q!==null&&p!==null)s=q*p;ts=s||0;}
+  cur.rows.push({num:cm.num!==undefined?String(normCell(r[cm.num])||'').trim():String(cur.rows.length+1),name:nv,req:cm.req!==undefined?String(normCell(r[cm.req])||'').trim():'',qty:q,unit:cm.unit!==undefined?String(normCell(r[cm.unit])||'').trim():'',work_price:wp,work_sum:ws,material_price:mp,material_sum:ms,price:p,sum:s,split:hasSplit,totalSum:ts,note:cm.note!==undefined?String(normCell(r[cm.note])||'').trim():'',excluded:false});
 }
 }
 if(cur.rows.length)secs.push(cur);
@@ -371,8 +379,43 @@ for(let c=0;c<nc;c++){infoTxt+=`[${c}] "${String(header[c]||'').slice(0,40)}"\n`
 info.textContent=infoTxt;
 document.getElementById('mapperPanel').style.display='block';m.classList.add('show');
 }
-function handleFile(file){setStatus('warn','Читаем…');const rd=new FileReader();rd.onload=e=>{try{const data=new Uint8Array(e.target.result);const wb=XLSX.read(data,{type:'array',cellFormula:false});const ws=wb.Sheets[wb.SheetNames[0]];const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});console.log('XLSX:',ws['!ref']);processRows(rows);}catch(err){console.error(err);setStatus('err','Ошибка чтения: '+err.message);}};rd.readAsArrayBuffer(file);}
-function processRows(rows){   RAW_ROWS=rows;   const rg=detectHeaderRange(rows);   if(rg.start<0){     // Заголовков нет — используем дефолтные названия колонок     HEADER_IDX=-1;     HEADER_END=-1;     HEADER_ROW=['№','Наименование','Тип','Ед. изм.','Кол-во','Цена','Сумма','Примечание','Код','Завод','Масса'];     buildMapperUI(rows,HEADER_ROW,HEADER_END);     parseAndBuild();     return;   }   HEADER_IDX=rg.start;   HEADER_END=rg.end;   HEADER_ROW=buildMergedHeader(rows,rg.start,rg.end);   buildMapperUI(rows,HEADER_ROW,HEADER_END);   parseAndBuild(); }
+function handleFile(file){
+  setStatus('warn','Читаем…');
+  const rd=new FileReader();
+  rd.onload=e=>{
+    try{
+      const data=new Uint8Array(e.target.result);
+      const wb=XLSX.read(data,{type:'array',cellFormula:false});
+      const ws=wb.Sheets[wb.SheetNames[0]];
+      const rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',raw:true});
+      processRows(rows);
+    }catch(err){
+      console.error(err);
+      setStatus('err','Ошибка чтения: '+err.message);
+    }
+  };
+  rd.readAsArrayBuffer(file);
+}
+function processRows(rows){
+  RAW_ROWS=rows;
+  try{
+    const rg=detectHeaderRange(rows);
+    if(rg.start<0){
+      HEADER_IDX=-1; HEADER_END=-1;
+      HEADER_ROW=['№','Наименование','Тип','Ед. изм.','Кол-во','Цена','Сумма','Примечание','Код','Завод','Масса'];
+      buildMapperUI(rows,HEADER_ROW,HEADER_END);
+      parseAndBuild();
+      return;
+    }
+    HEADER_IDX=rg.start; HEADER_END=rg.end;
+    HEADER_ROW=buildMergedHeader(rows,rg.start,rg.end);
+    buildMapperUI(rows,HEADER_ROW,HEADER_END);
+    parseAndBuild();
+  }catch(e){
+    setStatus('err','Ошибка обработки: '+e.message);
+    console.error(e);
+  }
+}
 function setStatus(t,m){const el=document.getElementById('status');el.className='status '+t;el.textContent=m;}
 function getMeta(){const g=id=>document.getElementById(id).value.trim();const iso=g('kpDate');return{kpNumber:g('kpNumber'),date:iso?isoToDisplay(iso):'',dateIso:iso,time:g('kpTime'),client:g('client'),object:g('object'),subtitle:g('subtitle'),vat:parseNum(g('vat'))||0,validity:g('validity'),company:g('company'),address:g('address'),phone:g('phone'),email:g('email'),site:g('site'),director:g('director'),manager:g('manager')};}
 
