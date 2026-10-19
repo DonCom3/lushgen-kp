@@ -210,7 +210,7 @@ tr.drag-over { border-top: 2px solid var(--y) !important; }
 <script>
 console.log('App loaded, starting...');
 
-/* Загрузка логотипа со сжатием */
+/* Загрузка логотипа со сжатием и сохранением ПРОЗРАЧНОСТИ */
 let LOGO_DATA = null;
 function loadLogo() {
     return new Promise((resolve) => {
@@ -219,7 +219,7 @@ function loadLogo() {
         img.onload = () => {
             try {
                 const canvas = document.createElement('canvas');
-                const maxSize = 300;
+                const maxSize = 400; // Увеличили разрешение для качества
                 let w = img.width;
                 let h = img.height;
                 if (w > maxSize || h > maxSize) {
@@ -230,10 +230,10 @@ function loadLogo() {
                 canvas.width = w;
                 canvas.height = h;
                 const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#ffffff'; // Белый фон
-                ctx.fillRect(0, 0, w, h);
+                // НЕ заливаем белым! Рисуем как есть, чтобы сохранить прозрачность
                 ctx.drawImage(img, 0, 0, w, h);
-                LOGO_DATA = canvas.toDataURL('image/jpeg', 0.85); 
+                // Используем PNG (он поддерживает прозрачность)
+                LOGO_DATA = canvas.toDataURL('image/png'); 
                 resolve(LOGO_DATA);
             } catch (e) { resolve(null); }
         };
@@ -570,9 +570,9 @@ const tbl=renderTables(sections,m,grandTotal,sp);
 const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(m.site)}`;
 const dtl=`${m.date}${m.time?' '+m.time:''}`;
 
-// Вставляем логотип в правый угол
+// Вставляем логотип в правый угол (ПРОЗРАЧНЫЙ, БЕЗ БЕЛОГО ФОНА, +15% РАЗМЕР)
 const logoHtml = LOGO_DATA 
-    ? `<img src="${LOGO_DATA}" style="position:absolute; right:24px; top:24px; height:56px; background:#fff; border-radius:8px; padding:4px; z-index:0;" alt="Лого">` 
+    ? `<img src="${LOGO_DATA}" style="position:absolute; right:24px; top:20px; height:64px; z-index:0;" alt="Лого">` 
     : ``;
 
 return`<div class="corp-header" style="position:relative;">
@@ -716,7 +716,7 @@ return null;
 async function urlToDataUrl(url){
 return new Promise(res=>{
 const img=new Image();img.crossOrigin='anonymous';
-img.onload=()=>{try{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0);res(c.toDataURL('image/jpeg', 0.9));}catch(e){res(null);}};
+img.onload=()=>{try{const c=document.createElement('canvas');c.width=img.width;c.height=img.height;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0);res(c.toDataURL('image/png'));}catch(e){res(null);}};
 img.onerror=()=>res(null);img.src=url;
 });
 }
@@ -738,9 +738,9 @@ const hh=42;
 // Шапка PDF
 doc.setFillColor(43,47,51);doc.rect(M,M,W,hh,'F');
 
-// Логотип в правом верхнем углу
+// Логотип в правом верхнем углу (ПРОЗРАЧНЫЙ, БЕЗ БЕЛОГО ФОНА, РАЗМЕР 36х36)
 if (LOGO_DATA) {
-    try { doc.addImage(LOGO_DATA, 'JPEG', M+W-38, M+4, 32, 32); } catch(e){}
+    try { doc.addImage(LOGO_DATA, 'PNG', M+W-46, M+2, 36, 36); } catch(e){}
 } else {
     doc.setFillColor(230,170,20);doc.circle(M+W-10,M+10,18,'F');
 }
@@ -931,7 +931,7 @@ doc.setFont(ff,'normal');doc.setFontSize(8);doc.setTextColor(209,213,219);
 doc.text(meta.address||'',M+5,y+11,{maxWidth:W-50});
 doc.text(`Тел.: ${meta.phone||''}  ·  Email: ${meta.email||''}`,M+5,y+16);
 doc.text(`Сайт: ${meta.site||''}`,M+5,y+20);
-if(qrData){try{doc.addImage(qrData,'JPEG',M+W-24,y+4,18,18);}catch(e){}}
+if(qrData){try{doc.addImage(qrData,'PNG',M+W-24,y+4,18,18);}catch(e){}}
 doc.setFont(ff,'bold');doc.setFontSize(8);doc.setTextColor(255,255,255);
 doc.text(`Директор: ${meta.director||''}`,M+5,y+25);
 doc.text(`Исполнитель: ${meta.manager||''}`,M+W*0.5,y+25);
