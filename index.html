@@ -852,18 +852,21 @@ doc.setFont(ff,'normal');doc.setFontSize(7);doc.setTextColor(150,150,150);
 doc.text(`КП сформировано ${dtl}. Срок действия — ${meta.validity} дней. Цены с НДС ${meta.vat}%.`,M+5,y+30);
 return doc.output('blob');
 }
-
-async function generateAndSavePDF(silent){
+  async function generateAndSavePDF(silent){
 if(!PARSED)throw new Error('Нет данных');
 const m=getMeta();
 const blob=await generatePDFBlob(PARSED,m);
 try{await saveDoc(m,PARSED);await renderHistory();}catch(e){console.warn('Save:',e);}
 const filename=`КП_ЛучСтройГрупп_${(m.kpNumber||'').replace(/[^\w\-]/g,'')}.pdf`;
 try{
-    }
-    return blob;
+const url=URL.createObjectURL(blob);
+const a=document.createElement('a');
+a.href=url;a.download=filename;a.style.display='none';
+document.body.appendChild(a);a.click();
+setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
+}catch(e){console.warn('Download fail:',e);}
+return blob;
 }
-
 async function downloadPDF(){
 if(!PARSED){setStatus('err','Сначала превью');return;}
 const ld=document.getElementById('pdf-loader');ld.style.display='flex';
