@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ЛучСтрой КП-Генератор v5.2</title>
+<title>ЛучСтрой КП-Генератор</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
@@ -75,7 +75,7 @@ body{margin:0;font-family:'Segoe UI',Roboto,Arial,sans-serif;background:var(--bg
 #pdf-content{background:var(--bg);border-radius:16px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.08)}
 .corp-header{background:linear-gradient(135deg,var(--gd),var(--g));color:#fff;padding:32px 36px;position:relative;overflow:hidden}
 .corp-header::after{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;background:var(--y);opacity:.15;border-radius:50%}
-.corp-header .top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;position:relative;z-index:1}
+.corp-header .top{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;position:relative;z-index:1;align-items:center;}
 .corp-logo{font-weight:800;font-size:24px;letter-spacing:1px}.corp-logo span{color:var(--y)}
 .corp-badge{background:var(--y);color:var(--gd);padding:6px 14px;border-radius:999px;font-weight:700;font-size:12px;white-space:nowrap}
 .corp-header h1{font-size:34px;margin:18px 0 8px;position:relative;z-index:1}
@@ -147,7 +147,7 @@ tr.drag-over { border-top: 2px solid var(--y) !important; }
 <body>
 <div class="app">
 <aside class="sidebar">
-<h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор v5.2</h2>
+<h2>ЛУЧ<span>СТРОЙ</span> · КП-Генератор</h2>
 <div class="tagline">Работы, материалы, скрытие колонок</div>
 <div class="panel">
 <h3>1. Загрузка расчёта</h3>
@@ -210,7 +210,8 @@ tr.drag-over { border-top: 2px solid var(--y) !important; }
 <div id="pdf-loader"><div class="box"><div class="spinner"></div>Формируем PDF…</div></div>
 <script>
 console.log('App loaded, starting...');
-  /* Загрузка логотипа для PDF */
+
+/* Загрузка логотипа для PDF */
 let LOGO_DATA = null;
 function loadLogo() {
     return new Promise((resolve) => {
@@ -222,41 +223,18 @@ function loadLogo() {
                 canvas.width = img.width;
                 canvas.height = img.height;
                 canvas.getContext('2d').drawImage(img, 0, 0);
-                // Конвертируем в Base64, чтобы jsPDF смог его прочитать
                 LOGO_DATA = canvas.toDataURL('image/png'); 
                 resolve(LOGO_DATA);
             } catch (e) {
-                console.warn('Ошибка конвертации логотипа', e);
                 resolve(null);
             }
         };
-        img.onerror = () => {
-            console.warn('Логотип не найден по пути logo.png');
-            resolve(null);
-        };
+        img.onerror = () => { resolve(null); };
         img.src = 'logo.png';
     });
 }
+
 /* IndexedDB */
-  /* Загрузка логотипа */
-let LOGO_DATA = null;
-function loadLogo() {
-    return new Promise(res => {
-        const img = new Image();
-        img.crossOrigin = 'anonymous';
-        img.onload = () => {
-            try {
-                const c = document.createElement('canvas');
-                c.width = img.width; c.height = img.height;
-                c.getContext('2d').drawImage(img, 0, 0);
-                LOGO_DATA = c.toDataURL('image/png');
-                res(LOGO_DATA);
-            } catch(e) { res(null); }
-        };
-        img.onerror = () => res(null);
-        img.src = 'logo.png';
-    });
-}
 const DB_NAME='luchsg_kp',DB_VERSION=2,STORE_NAME='docs';let db=null;
 function openDB(){return new Promise((res,rej)=>{if(db)return res(db);const r=indexedDB.open(DB_NAME,DB_VERSION);r.onupgradeneeded=e=>{const d=e.target.result;if(d.objectStoreNames.contains(STORE_NAME))d.deleteObjectStore(STORE_NAME);const s=d.createObjectStore(STORE_NAME,{keyPath:'id'});s.createIndex('savedAt','savedAt');};r.onsuccess=e=>{db=e.target.result;res(db);};r.onerror=e=>rej(e.target.error);});}
 async function saveDoc(m,p){const d=await openDB();return new Promise((res,rej)=>{const tx=d.transaction(STORE_NAME,'readwrite');const rec={id:(m.kpNumber||'КП')+'_'+Date.now(),savedAt:Date.now(),kpNumber:m.kpNumber,date:m.date,time:m.time,client:m.client,object:m.object,total:p.grandTotal,vat:m.vat,meta:m,parsed:p};tx.objectStore(STORE_NAME).put(rec);tx.oncomplete=()=>res(rec);tx.onerror=e=>rej(e.target.error);});}
@@ -536,7 +514,6 @@ function setupDragAndDrop(){
           const row = PARSED.sections[sourceSec].rows.splice(sourceIdx, 1)[0];
           PARSED.sections[sourceSec].rows.splice(targetIdx, 0, row);
           
-          // Обновляем нумерацию
           PARSED.sections[sourceSec].rows.forEach((r, i) => { r.num = String(i + 1); });
           
           recalcTotals();
@@ -565,7 +542,7 @@ document.getElementById('toolbarInfo').innerHTML=`КП <b>№ ${m.kpNumber}</b> 
 ['btnPdf','btnPrint','btnPdf2','btnPrint2'].forEach(id=>{const b=document.getElementById(id);if(b)b.disabled=false;});
 setupEditable();
 initColToggles();
-setupDragAndDrop(); // <--- Включаем Drag-and-Drop
+setupDragAndDrop();
 if(pw)pw.scrollTop=st;
 setStatus('ok','Превью готово');
 }
@@ -584,7 +561,13 @@ hero=`<div class="corp-card"><div class="label">Общая стоимость</d
 const tbl=renderTables(sections,m,grandTotal,sp);
 const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(m.site)}`;
 const dtl=`${m.date}${m.time?' '+m.time:''}`;
-return`<div class="corp-logo"><img src="logo.png" style="height:52px;display:block;background:#fff;border-radius:8px;padding:4px;box-sizing:border-box;" onerror="this.style.display='none';this.parentElement.innerHTML='ЛУЧ<span>СТРОЙ</span> ГРУПП';"></div><div class="corp-badge">КП № ${escapeHtml(m.kpNumber)} от ${dtl}</div></div><h1>${escapeHtml(m.object)}</h1><div class="subtitle">${escapeHtml(m.subtitle)}</div><div class="client">Заказчик: <b>${escapeHtml(m.client)}</b></div></div><div class="corp-body"><div class="hero-cards">${hero}</div>${tbl}</div><div class="corp-footer"><div class="grid"><div><h3>${escapeHtml(m.company)}</h3><p>${escapeHtml(m.address)}</p><p>Тел.: ${escapeHtml(m.phone)}</p><p>Email: ${escapeHtml(m.email)}</p><p>Сайт: ${escapeHtml(m.site)}</p></div><div style="text-align:right"><img class="qr" src="${qrURL}" alt="QR"></div></div><div class="sign"><div>Директор: <b>${escapeHtml(m.director)}</b></div><div>Исполнитель: <b>${escapeHtml(m.manager)}</b></div></div><p style="margin-top:16px;color:#9ca3af;font-size:12px">КП сформировано ${dtl}. Срок действия — ${m.validity} дней. Цены с НДС ${m.vat}%.</p></div>`;
+
+// Вставляем логотип или фолбэк
+const logoHtml = LOGO_DATA 
+    ? `<img src="${LOGO_DATA}" style="height:52px;display:block;background:#fff;border-radius:6px;padding:4px;box-sizing:border-box;" alt="Лого">` 
+    : `ЛУЧ<span>СТРОЙ</span> ГРУПП`;
+
+return`<div class="corp-header"><div class="top"><div class="corp-logo">${logoHtml}</div><div class="corp-badge">КП № ${escapeHtml(m.kpNumber)} от ${dtl}</div></div><h1>${escapeHtml(m.object)}</h1><div class="subtitle">${escapeHtml(m.subtitle)}</div><div class="client">Заказчик: <b>${escapeHtml(m.client)}</b></div></div><div class="corp-body"><div class="hero-cards">${hero}</div>${tbl}</div><div class="corp-footer"><div class="grid"><div><h3>${escapeHtml(m.company)}</h3><p>${escapeHtml(m.address)}</p><p>Тел.: ${escapeHtml(m.phone)}</p><p>Email: ${escapeHtml(m.email)}</p><p>Сайт: ${escapeHtml(m.site)}</p></div><div style="text-align:right"><img class="qr" src="${qrURL}" alt="QR"></div></div><div class="sign"><div>Директор: <b>${escapeHtml(m.director)}</b></div><div>Исполнитель: <b>${escapeHtml(m.manager)}</b></div></div><p style="margin-top:16px;color:#9ca3af;font-size:12px">КП сформировано ${dtl}. Срок действия — ${m.validity} дней. Цены с НДС ${m.vat}%.</p></div>`;
 }
 
 function renderTables(sections,m,total,sp){
@@ -732,20 +715,14 @@ const PW=split?297:210,PH=split?210:297;
 const M=10,W=PW-M*2;
 const dtl=`${meta.date}${meta.time?' '+meta.time:''}`;
 const hh=38;
+
+// Шапка PDF
 doc.setFillColor(43,47,51);doc.rect(M,M,W,hh,'F');
 doc.setFillColor(230,170,20);doc.circle(M+W-10,M+10,18,'F');
+
 if (LOGO_DATA) {
-    try { doc.addImage(LOGO_DATA, 'PNG', M+5, M+4, 30, 30); } catch(e){}
+    try { doc.addImage(LOGO_DATA, 'PNG', M+5, M+3, 32, 32); } catch(e){}
 } else {
-if (LOGO_DATA) {
-    try { 
-        // Вставляем картинку: X, Y, Ширина, Высота
-        doc.addImage(LOGO_DATA, 'PNG', M+5, M+3, 32, 32); 
-    } catch(e){
-        console.warn('Не удалось вставить лого в PDF', e);
-    }
-} else {
-    // Запасной вариант, если картинка не загрузилась
     doc.setFont(ff,'bold');doc.setFontSize(18);doc.setTextColor(255,255,255);
     doc.text('ЛУЧ',M+6,M+12);
     const lw=doc.getTextWidth('ЛУЧ');
@@ -753,7 +730,7 @@ if (LOGO_DATA) {
     const sw=doc.getTextWidth('СТРОЙ');
     doc.setTextColor(255,255,255);doc.text(' ГРУПП',M+6+lw+sw,M+12);
 }
-}
+
 const kpTxt=`КП № ${meta.kpNumber} от ${dtl}`;
 doc.setFont(ff,'normal');doc.setFontSize(9);
 const kpW=doc.getTextWidth(kpTxt)+8;
@@ -824,10 +801,10 @@ if(V.name)cells.push({content:r.name||'',styles:{...style}});
 if(V.req)cells.push({content:r.req||'',styles:{...style}});
 if(V.qty)cells.push({content:r.qty!==null?fmt(r.qty):'',styles:{halign:'right',...style}});
 if(V.unit)cells.push({content:r.unit||'',styles:{halign:'center',...style}});
-if(V.work_price)cells.push({content:r.work_price!==null?fmt(r.work_price):'',styles:{halign:'right',fillColor:r.excluded?[249,250,251]:[240,250,240],...style}});
-if(V.work_sum)cells.push({content:r.work_sum!==null?fmt(r.work_sum):'',styles:{halign:'right',fillColor:r.excluded?[249,250,251]:[240,250,240],...style}});
-if(V.material_price)cells.push({content:r.material_price!==null?fmt(r.material_price):'',styles:{halign:'right',fillColor:r.excluded?[249,250,251]:[235,245,255],...style}});
-if(V.material_sum)cells.push({content:r.material_sum!==null?fmt(r.material_sum):'',styles:{halign:'right',fillColor:r.excluded?[249,250,251]:[235,245,255],...style}});
+if(V.work_price)cells.push({content:r.work_price!==null?fmt(r.work_price):'',styles:{halign:'right',...style}});
+if(V.work_sum)cells.push({content:r.work_sum!==null?fmt(r.work_sum):'',styles:{halign:'right',...style}});
+if(V.material_price)cells.push({content:r.material_price!==null?fmt(r.material_price):'',styles:{halign:'right',...style}});
+if(V.material_sum)cells.push({content:r.material_sum!==null?fmt(r.material_sum):'',styles:{halign:'right',...style}});
 if(V.totalSum)cells.push({content:fmt(r.totalSum),styles:{halign:'right',fontStyle:'bold',...style}});
 if(V.note)cells.push({content:r.note||'',styles:{...style}});
 return cells;
@@ -850,11 +827,11 @@ if(V.name) colStyles[cIdx++] = {cellWidth: 'auto', halign: 'left'};
 if(V.req) colStyles[cIdx++] = {cellWidth: 20, halign: 'left'};
 if(V.qty) colStyles[cIdx++] = {cellWidth: 15, halign: 'right'};
 if(V.unit) colStyles[cIdx++] = {cellWidth: 12, halign: 'center'};
-if(V.work_price) colStyles[cIdx++] = {cellWidth: 22, halign: 'right'};
-if(V.work_sum) colStyles[cIdx++] = {cellWidth: 28, halign: 'right'};
-if(V.material_price) colStyles[cIdx++] = {cellWidth: 22, halign: 'right'};
-if(V.material_sum) colStyles[cIdx++] = {cellWidth: 28, halign: 'right'};
-if(V.totalSum) colStyles[cIdx++] = {cellWidth: 32, halign: 'right'};
+if(V.work_price) colStyles[cIdx++] = {cellWidth: 24, halign: 'right'};
+if(V.work_sum) colStyles[cIdx++] = {cellWidth: 30, halign: 'right'};
+if(V.material_price) colStyles[cIdx++] = {cellWidth: 24, halign: 'right'};
+if(V.material_sum) colStyles[cIdx++] = {cellWidth: 30, halign: 'right'};
+if(V.totalSum) colStyles[cIdx++] = {cellWidth: 34, halign: 'right'};
 if(V.note) colStyles[cIdx++] = {cellWidth: 20, halign: 'left'};
 }else{
 const h=[];
@@ -893,8 +870,8 @@ if(V.name) colStyles[cIdx++] = {cellWidth: 'auto', halign: 'left'};
 if(V.req) colStyles[cIdx++] = {cellWidth: 25, halign: 'left'};
 if(V.qty) colStyles[cIdx++] = {cellWidth: 15, halign: 'right'};
 if(V.unit) colStyles[cIdx++] = {cellWidth: 12, halign: 'center'};
-if(V.price) colStyles[cIdx++] = {cellWidth: 30, halign: 'right'};
-if(V.sum) colStyles[cIdx++] = {cellWidth: 35, halign: 'right'};
+if(V.price) colStyles[cIdx++] = {cellWidth: 32, halign: 'right'};
+if(V.sum) colStyles[cIdx++] = {cellWidth: 36, halign: 'right'};
 if(V.note) colStyles[cIdx++] = {cellWidth: 20, halign: 'left'};
 }
 doc.autoTable({head,body,startY:y,margin:{left:M,right:M},theme:'grid',styles:{font:ff,fontSize:8,cellPadding:1.8,lineColor:[229,231,235],lineWidth:0.1,textColor:[31,35,40],overflow:'linebreak'},headStyles:{font:ff,fontStyle:'bold',fontSize:7.5,fillColor:[249,250,251],textColor:[107,114,128],lineWidth:0.1},bodyStyles:{fontSize:8},columnStyles:colStyles,pageBreak:'auto',rowPageBreak:'avoid',didDrawPage:(d)=>{if(d.pageNumber>1){doc.setFont(ff,'normal');doc.setFontSize(7);doc.setTextColor(150,150,150);doc.text(`КП № ${meta.kpNumber} — продолжение`,M,6);}}});
@@ -935,7 +912,8 @@ doc.setFont(ff,'normal');doc.setFontSize(7);doc.setTextColor(150,150,150);
 doc.text(`КП сформировано ${dtl}. Срок действия — ${meta.validity} дней. Цены с НДС ${meta.vat}%.`,M+5,y+30);
 return doc.output('blob');
 }
-  async function generateAndSavePDF(silent){
+
+async function generateAndSavePDF(silent){
 if(!PARSED)throw new Error('Нет данных');
 const m=getMeta();
 const blob=await generatePDFBlob(PARSED,m);
@@ -950,6 +928,7 @@ setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},2000);
 }catch(e){console.warn('Download fail:',e);}
 return blob;
 }
+
 async function downloadPDF(){
 if(!PARSED){setStatus('err','Сначала превью');return;}
 const ld=document.getElementById('pdf-loader');ld.style.display='flex';
@@ -1016,7 +995,7 @@ document.getElementById('kpDate').addEventListener('change',async()=>{
 });
 
 (async()=>{
-    await loadLogo(); // <--- Добавили загрузку лого
+    await loadLogo();
     await initDefaults();
     initColToggles();
     await renderHistory();
