@@ -328,7 +328,6 @@ return secs;
 }
 function parseAndBuild(){
 if(!RAW_ROWS)return;
-if(HEADER_IDX<0){setStatus('err','Нет заголовков');return;}
 const cm={};
 document.querySelectorAll('.mapper select').forEach(sel=>{const f=sel.dataset.field,v=sel.value;if(v!==''&&v!=='skip')cm[f]=parseInt(v,10);});
 COL_MAP=cm;
