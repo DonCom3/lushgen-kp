@@ -138,7 +138,6 @@ tr.row-excluded td.num{text-decoration:line-through;text-decoration-color:#ef444
 .edit-hint{background:rgba(255,193,7,.15);color:#8a6d00;font-size:11px;padding:6px 10px;border-radius:6px;border-left:3px solid var(--y)}
 @media(hover:none){.row-del,.sec-del{opacity:1!important;color:#9ca3af}}
 @media print{.sidebar,.preview-toolbar,#pdf-loader,.no-print,.col-actions,.edit-hint{display:none!important}.app{display:block;height:auto}.preview-wrap{padding:0;overflow:visible}#pdf-content{box-shadow:none;border-radius:0}}
-/* Стили для Drag-and-Drop */
 tr[data-tr] { cursor: grab; }
 tr.dragging { opacity: 0.4; background: #e5e7eb !important; }
 tr.drag-over { border-top: 2px solid var(--y) !important; }
@@ -211,7 +210,7 @@ tr.drag-over { border-top: 2px solid var(--y) !important; }
 <script>
 console.log('App loaded, starting...');
 
-/* Загрузка логотипа для PDF */
+/* Загрузка логотипа */
 let LOGO_DATA = null;
 function loadLogo() {
     return new Promise((resolve) => {
@@ -225,9 +224,7 @@ function loadLogo() {
                 canvas.getContext('2d').drawImage(img, 0, 0);
                 LOGO_DATA = canvas.toDataURL('image/png'); 
                 resolve(LOGO_DATA);
-            } catch (e) {
-                resolve(null);
-            }
+            } catch (e) { resolve(null); }
         };
         img.onerror = () => { resolve(null); };
         img.src = 'logo.png';
@@ -562,12 +559,22 @@ const tbl=renderTables(sections,m,grandTotal,sp);
 const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(m.site)}`;
 const dtl=`${m.date}${m.time?' '+m.time:''}`;
 
-// Вставляем логотип или фолбэк
+// Вставляем логотип в правый угол
 const logoHtml = LOGO_DATA 
-    ? `<img src="${LOGO_DATA}" style="height:52px;display:block;background:#fff;border-radius:6px;padding:4px;box-sizing:border-box;" alt="Лого">` 
-    : `ЛУЧ<span>СТРОЙ</span> ГРУПП`;
+    ? `<img src="${LOGO_DATA}" style="position:absolute; right:24px; top:24px; height:56px; background:#fff; border-radius:8px; padding:4px; z-index:0;" alt="Лого">` 
+    : ``;
 
-return`<div class="corp-header"><div class="top"><div class="corp-logo">${logoHtml}</div><div class="corp-badge">КП № ${escapeHtml(m.kpNumber)} от ${dtl}</div></div><h1>${escapeHtml(m.object)}</h1><div class="subtitle">${escapeHtml(m.subtitle)}</div><div class="client">Заказчик: <b>${escapeHtml(m.client)}</b></div></div><div class="corp-body"><div class="hero-cards">${hero}</div>${tbl}</div><div class="corp-footer"><div class="grid"><div><h3>${escapeHtml(m.company)}</h3><p>${escapeHtml(m.address)}</p><p>Тел.: ${escapeHtml(m.phone)}</p><p>Email: ${escapeHtml(m.email)}</p><p>Сайт: ${escapeHtml(m.site)}</p></div><div style="text-align:right"><img class="qr" src="${qrURL}" alt="QR"></div></div><div class="sign"><div>Директор: <b>${escapeHtml(m.director)}</b></div><div>Исполнитель: <b>${escapeHtml(m.manager)}</b></div></div><p style="margin-top:16px;color:#9ca3af;font-size:12px">КП сформировано ${dtl}. Срок действия — ${m.validity} дней. Цены с НДС ${m.vat}%.</p></div>`;
+return`<div class="corp-header" style="position:relative;">
+${logoHtml}
+<div class="top" style="position:relative; z-index:1;">
+<div class="corp-logo">ЛУЧ<span>СТРОЙ</span> ГРУПП</div>
+<div class="corp-badge">КП № ${escapeHtml(m.kpNumber)} от ${dtl}</div>
+</div>
+<h1 style="position:relative; z-index:1;">${escapeHtml(m.object)}</h1>
+<div class="subtitle" style="position:relative; z-index:1;">${escapeHtml(m.subtitle)}</div>
+<div class="client" style="position:relative; z-index:1;">Заказчик: <b>${escapeHtml(m.client)}</b></div>
+</div>
+<div class="corp-body"><div class="hero-cards">${hero}</div>${tbl}</div><div class="corp-footer"><div class="grid"><div><h3>${escapeHtml(m.company)}</h3><p>${escapeHtml(m.address)}</p><p>Тел.: ${escapeHtml(m.phone)}</p><p>Email: ${escapeHtml(m.email)}</p><p>Сайт: ${escapeHtml(m.site)}</p></div><div style="text-align:right"><img class="qr" src="${qrURL}" alt="QR"></div></div><div class="sign"><div>Директор: <b>${escapeHtml(m.director)}</b></div><div>Исполнитель: <b>${escapeHtml(m.manager)}</b></div></div><p style="margin-top:16px;color:#9ca3af;font-size:12px">КП сформировано ${dtl}. Срок действия — ${m.validity} дней. Цены с НДС ${m.vat}%.</p></div>`;
 }
 
 function renderTables(sections,m,total,sp){
@@ -714,35 +721,43 @@ const ff=font?'Roboto':'helvetica';
 const PW=split?297:210,PH=split?210:297;
 const M=10,W=PW-M*2;
 const dtl=`${meta.date}${meta.time?' '+meta.time:''}`;
-const hh=38;
+const hh=42;
 
 // Шапка PDF
 doc.setFillColor(43,47,51);doc.rect(M,M,W,hh,'F');
-doc.setFillColor(230,170,20);doc.circle(M+W-10,M+10,18,'F');
 
+// Логотип в правом верхнем углу (вместо желтого круга)
 if (LOGO_DATA) {
-    try { doc.addImage(LOGO_DATA, 'PNG', M+5, M+3, 32, 32); } catch(e){}
+    try { doc.addImage(LOGO_DATA, 'PNG', M+W-38, M+4, 32, 32); } catch(e){}
 } else {
-    doc.setFont(ff,'bold');doc.setFontSize(18);doc.setTextColor(255,255,255);
-    doc.text('ЛУЧ',M+6,M+12);
-    const lw=doc.getTextWidth('ЛУЧ');
-    doc.setTextColor(255,193,7);doc.text('СТРОЙ',M+6+lw,M+12);
-    const sw=doc.getTextWidth('СТРОЙ');
-    doc.setTextColor(255,255,255);doc.text(' ГРУПП',M+6+lw+sw,M+12);
+    doc.setFillColor(230,170,20);doc.circle(M+W-10,M+10,18,'F');
 }
 
+// Текст слева
+doc.setFont(ff,'bold');doc.setFontSize(18);doc.setTextColor(255,255,255);
+doc.text('ЛУЧ',M+6,M+12);
+const lw=doc.getTextWidth('ЛУЧ');
+doc.setTextColor(255,193,7);doc.text('СТРОЙ',M+6+lw,M+12);
+const sw=doc.getTextWidth('СТРОЙ');
+doc.setTextColor(255,255,255);doc.text(' ГРУПП',M+6+lw+sw,M+12);
+
+// Плашка КП (сдвигаем влево, чтобы не перекрывала лого)
 const kpTxt=`КП № ${meta.kpNumber} от ${dtl}`;
 doc.setFont(ff,'normal');doc.setFontSize(9);
 const kpW=doc.getTextWidth(kpTxt)+8;
-doc.setFillColor(255,193,7);doc.roundedRect(M+W-kpW-4,M+6,kpW,7,3.5,3.5,'F');
-doc.setTextColor(43,47,51);doc.text(kpTxt,M+W-kpW/2-4,M+11,{align:'center'});
+doc.setFillColor(255,193,7);doc.roundedRect(M+W-kpW-44,M+10,kpW,7,3.5,3.5,'F');
+doc.setTextColor(43,47,51);doc.text(kpTxt,M+W-kpW/2-44,M+15,{align:'center'});
+
+// Title
 doc.setFont(ff,'bold');doc.setFontSize(20);doc.setTextColor(255,255,255);
-doc.text(meta.object||'Коммерческое предложение',M+6,M+24,{maxWidth:W-12});
+doc.text(meta.object||'Коммерческое предложение',M+6,M+26,{maxWidth:W-12});
 doc.setFont(ff,'normal');doc.setFontSize(10);doc.setTextColor(209,213,219);
-doc.text(meta.subtitle||'',M+6,M+30,{maxWidth:W-12});
-doc.setFontSize(11);doc.setTextColor(255,255,255);doc.text('Заказчик:',M+6,M+35);
+doc.text(meta.subtitle||'',M+6,M+32,{maxWidth:W-12});
+// Client
+doc.setFontSize(11);doc.setTextColor(255,255,255);doc.text('Заказчик:',M+6,M+38);
 doc.setTextColor(255,193,7);doc.setFont(ff,'bold');
-doc.text(meta.client||'',M+6+doc.getTextWidth('Заказчик: '),M+35);
+doc.text(meta.client||'',M+6+doc.getTextWidth('Заказчик: '),M+38);
+
 let y=M+hh+6;
 const{w:wt,m:mt}=(()=>{let w=0,m=0;parsed.sections.forEach(s=>s.rows.forEach(r=>{if(r.excluded)return;if(r.split){w+=r.work_sum||0;m+=r.material_sum||0;}else{w+=r.sum||0;}}));return{w,m};})();
 const rc=parsed.sections.reduce((a,s)=>a+s.rows.length,0);
